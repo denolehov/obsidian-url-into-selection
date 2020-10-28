@@ -18,16 +18,15 @@ be aware that you will lose an ability to quickly "paste" attachments into Obsid
 
 
 To install this plugin, download `zip` archive from [GitHub releases page](https://github.com/denolehov/obsidian-url-into-selection/releases).
-Open the archive, and copy `main.js` and `manifest.json` into `<vault>/.obsidian/plugins/obsidian-url-into-selection` (create plugin directory if needed).
+Extract the archive into `<vault>/.obsidian/plugins`.
 
 Alternatively, using bash:
 ```bash
 OBSIDIAN_VAULT_DIR=/path/to/your/obsidian/vault
 
-# create plugin directory
-mkdir -p $OBSIDIAN_VAULT_DIR/.obsidian/plugins/obsidian-url-into-selection
+# create plugins directory if it's not yet there
+mkdir -p $OBSIDIAN_VAULT_DIR/.obsidian/plugins
 
 # unzip `main.js` and `manifest.json` into a plugin directory
-unzip -p ~/Downloads/obsidian-url-into-selection-1.0.0.zip obsidian-url-into-selection-1.0.0/main.js > $OBSIDIAN_VAULT_DIR/.obsidian/plugins/obsidian-url-into-selection/main.js
-unzip -p ~/Downloads/obsidian-url-into-selection-1.0.0.zip obsidian-url-into-selection-1.0.0/manifest.json > $OBSIDIAN_VAULT_DIR/.obsidian/plugins/obsidian-url-into-selection/manifest.json
+unzip ~/Downloads/obsidian-url-into-selection_v1.0.0.zip -d $OBSIDIAN_VAULT_DIR/.obsidian/plugins
 ```
