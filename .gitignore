@@ -9,3 +9,6 @@ package-lock.json
 # build
 *.js.map
 main.js
+
+.prettierignore
+.prettierrc.json
