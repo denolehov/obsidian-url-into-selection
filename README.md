@@ -28,6 +28,6 @@ OBSIDIAN_VAULT_DIR=/path/to/your/obsidian/vault
 mkdir -p $OBSIDIAN_VAULT_DIR/.obsidian/plugins/obsidian-url-into-selection
 
 # unzip `main.js` and `manifest.json` into a plugin directory
-unzip -p ~/Downloads/obsidian-url-into-selection-1.0.0.zip obsidian-url-into-selection-0.0.6/main.js > $OBSIDIAN_VAULT_DIR/.obsidian/plugins/obsidian-url-into-selection/main.js
-unzip -p ~/Downloads/obsidian-url-into-selection-1.0.0.zip obsidian-url-into-selection-0.0.6/manifest.json > $OBSIDIAN_VAULT_DIR/.obsidian/plugins/obsidian-url-into-selection/manifest.json
+unzip -p ~/Downloads/obsidian-url-into-selection-1.0.0.zip obsidian-url-into-selection-1.0.0/main.js > $OBSIDIAN_VAULT_DIR/.obsidian/plugins/obsidian-url-into-selection/main.js
+unzip -p ~/Downloads/obsidian-url-into-selection-1.0.0.zip obsidian-url-into-selection-1.0.0/manifest.json > $OBSIDIAN_VAULT_DIR/.obsidian/plugins/obsidian-url-into-selection/manifest.json
 ```
