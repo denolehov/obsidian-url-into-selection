@@ -23,10 +23,6 @@ Extract the archive into `<vault>/.obsidian/plugins`.
 Alternatively, using bash:
 ```bash
 OBSIDIAN_VAULT_DIR=/path/to/your/obsidian/vault
-
-# create plugins directory if it's not yet there
 mkdir -p $OBSIDIAN_VAULT_DIR/.obsidian/plugins
-
-# unzip `main.js` and `manifest.json` into a plugin directory
 unzip ~/Downloads/obsidian-url-into-selection_v1.0.0.zip -d $OBSIDIAN_VAULT_DIR/.obsidian/plugins
 ```
