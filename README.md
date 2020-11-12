@@ -1,28 +1,19 @@
-# obsidian-url-into-selection
+# Paste URL into selection
 
-Insert links into a selected text "notion-style".
+Insert links into a selected text "notion-style" (default hotkey is `ctrl + shift + v`).
 
-The default hotkey is `ctrl + shift + v`, if you want to change it to "classic" `ctrl + v`, 
-be aware that you will lose an ability to quickly "paste" attachments into Obsidian editor.
+## Demo
+![example](https://user-images.githubusercontent.com/4748206/98997874-ed55fb80-253d-11eb-9121-709a316a4d1e.gif)
 
+## Compatibility
+Custom plugins are only available for Obsidian v0.9.8+.
 
-![example](https://user-images.githubusercontent.com/4748206/97376946-665f1d00-18c7-11eb-8fd8-de2976fcdb47.gif)
-
-### Installation
-
-
-#### Prerequisites
-
-- Obsidian 0.9.7 (Plugin API alpha release) is installed
-- Support for 3rd party plugins is enabled in settings (Obsidian > Settings > Third Party plugin > Safe mode - OFF)
+# Installation
+In order to install this plugin, go to "Settings > Third Party Plugins > Paste URL into selection".
 
 
-To install this plugin, download `zip` archive from [GitHub releases page](https://github.com/denolehov/obsidian-url-into-selection/releases).
-Extract the archive into `<vault>/.obsidian/plugins`.
+If you have any kind of feedback or questions, feel free to reach out via GitHub issues or `@evrwhr` on [Obsidian Discord server](https://discord.com/invite/veuWUTm).
 
-Alternatively, using bash:
-```bash
-OBSIDIAN_VAULT_DIR=/path/to/your/obsidian/vault
-mkdir -p $OBSIDIAN_VAULT_DIR/.obsidian/plugins
-unzip ~/Downloads/obsidian-url-into-selection_v1.0.0.zip -d $OBSIDIAN_VAULT_DIR/.obsidian/plugins
-```
+---
+
+> If you like what I do, you could consider buying me a coffee. It is unnecessary, but appreciated :) https://www.buymeacoffee.com/evrwhr
