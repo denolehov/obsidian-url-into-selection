@@ -1,5 +1,6 @@
 import { Plugin } from "obsidian";
 import { clipboard } from "electron";
+import * as CodeMirror from "codemirror";
 
 export default class UrlIntoSelection extends Plugin {
   async onload() {
@@ -17,8 +18,7 @@ export default class UrlIntoSelection extends Plugin {
   }
 
   urlIntoSelection(): void {
-    let activeLeaf: any = this.app.workspace.activeLeaf;
-    let editor = activeLeaf.view.sourceMode.cmEditor;
+    let editor = this.getEditor();
     let selectedText = editor.somethingSelected()
       ? editor.getSelection()
       : false;
@@ -34,5 +34,10 @@ export default class UrlIntoSelection extends Plugin {
       "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$"
     );
     return urlRegex.test(text);
+  }
+
+  private getEditor(): CodeMirror.Editor {
+    let activeLeaf: any = this.app.workspace.activeLeaf;
+    return activeLeaf.view.sourceMode.cmEditor;
   }
 }
