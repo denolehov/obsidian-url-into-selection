@@ -2,6 +2,11 @@ import { Plugin } from "obsidian";
 import { clipboard } from "electron";
 import * as CodeMirror from "codemirror";
 
+interface WordBoundaries {
+  start: { line: number; ch: number };
+  end: { line: number; ch: number };
+}
+
 export default class UrlIntoSelection extends Plugin {
   async onload() {
     this.addCommand({
@@ -15,36 +20,16 @@ export default class UrlIntoSelection extends Plugin {
         },
       ],
     });
-
-    this.addCommand({
-      id: "paste-clipboard-into-url",
-      name:
-        "Paste text into URL and create a clickable link out of it (reverse of the main shortcut)",
-      callback: () => this.formatUrl(),
-    });
   }
 
   urlIntoSelection(): void {
     let editor = this.getEditor();
-    let selectedText = editor.somethingSelected()
-      ? editor.getSelection()
-      : false;
+    let selectedText = UrlIntoSelection.getSelectedText(editor);
     let clipboardText = clipboard.readText("clipboard");
 
-    if (selectedText && clipboardText && this.isUrl(clipboardText)) {
+    if (clipboardText && this.isUrl(clipboardText)) {
       editor.replaceSelection(`[${selectedText}](${clipboardText})`);
-    }
-  }
-
-  formatUrl(): void {
-    let editor = this.getEditor();
-    let selectedText = editor.somethingSelected()
-      ? editor.getSelection()
-      : false;
-    let clipboardText = clipboard.readText("clipboard");
-
-    if (selectedText && this.isUrl(selectedText)) {
-      let clipboardText = clipboard.readText("clipboard") || "";
+    } else if (this.isUrl(selectedText)) {
       editor.replaceSelection(`[${clipboardText}](${selectedText})`);
     }
   }
@@ -59,5 +44,33 @@ export default class UrlIntoSelection extends Plugin {
   private getEditor(): CodeMirror.Editor {
     let activeLeaf: any = this.app.workspace.activeLeaf;
     return activeLeaf.view.sourceMode.cmEditor;
+  }
+
+  private static getSelectedText(editor: CodeMirror.Editor): string {
+    if (!editor.somethingSelected()) {
+      let wordBoundaries = UrlIntoSelection.getWordBoundaries(editor);
+      editor.getDoc().setSelection(wordBoundaries.start, wordBoundaries.end);
+    }
+    return editor.getSelection();
+  }
+
+  private static getWordBoundaries(editor: CodeMirror.Editor): WordBoundaries {
+    let startCh, endCh: number;
+    let cursor = editor.getCursor();
+
+    if (editor.getTokenTypeAt(cursor) === "url") {
+      let token = editor.getTokenAt(cursor);
+      startCh = token.start;
+      endCh = token.end;
+    } else {
+      let word = editor.findWordAt(cursor);
+      startCh = word.anchor.ch;
+      endCh = word.head.ch;
+    }
+
+    return {
+      start: { line: cursor.line, ch: startCh },
+      end: { line: cursor.line, ch: endCh },
+    };
   }
 }
