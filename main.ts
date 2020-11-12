@@ -15,6 +15,13 @@ export default class UrlIntoSelection extends Plugin {
         },
       ],
     });
+
+    this.addCommand({
+      id: "paste-clipboard-into-url",
+      name:
+        "Paste text into URL and create a clickable link out of it (reverse of the main shortcut)",
+      callback: () => this.formatUrl(),
+    });
   }
 
   urlIntoSelection(): void {
@@ -26,6 +33,19 @@ export default class UrlIntoSelection extends Plugin {
 
     if (selectedText && clipboardText && this.isUrl(clipboardText)) {
       editor.replaceSelection(`[${selectedText}](${clipboardText})`);
+    }
+  }
+
+  formatUrl(): void {
+    let editor = this.getEditor();
+    let selectedText = editor.somethingSelected()
+      ? editor.getSelection()
+      : false;
+    let clipboardText = clipboard.readText("clipboard");
+
+    if (selectedText && this.isUrl(selectedText)) {
+      let clipboardText = clipboard.readText("clipboard") || "";
+      editor.replaceSelection(`[${clipboardText}](${selectedText})`);
     }
   }
 
