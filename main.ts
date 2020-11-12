@@ -3,7 +3,6 @@ import { clipboard } from "electron";
 
 export default class UrlIntoSelection extends Plugin {
   async onload() {
-    console.log(this.app);
     this.addCommand({
       id: "paste-url-into-selection",
       name: "",
