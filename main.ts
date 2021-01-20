@@ -24,10 +24,10 @@ export default class UrlIntoSelection extends Plugin {
 
   urlIntoSelection(): void {
     let editor = this.getEditor();
-    let selectedText = UrlIntoSelection.getSelectedText(editor);
-    let clipboardText = clipboard.readText("clipboard");
+    let selectedText = (UrlIntoSelection.getSelectedText(editor) || '').trim();
+    let clipboardText = (clipboard.readText("clipboard") || '').trim();
 
-    if (clipboardText && this.isUrl(clipboardText)) {
+    if (this.isUrl(clipboardText)) {
       editor.replaceSelection(`[${selectedText}](${clipboardText})`);
     } else if (this.isUrl(selectedText)) {
       editor.replaceSelection(`[${clipboardText}](${selectedText})`);
