@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { Plugin, PluginSettingTab, Setting } from "obsidian";
 import { clipboard } from "electron";
 import * as CodeMirror from "codemirror";
 
@@ -7,8 +7,21 @@ interface WordBoundaries {
   end: { line: number; ch: number };
 }
 
+interface PluginSettings {
+  regex: string;
+}
+
+const DEFAULT_SETTINGS: PluginSettings = {
+  regex:
+    "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+};
+
 export default class UrlIntoSelection extends Plugin {
+  settings: PluginSettings;
+
   async onload() {
+    await this.loadSettings();
+    this.addSettingTab(new UrlIntoSelectionSettingsTab(this.app, this));
     this.addCommand({
       id: "paste-url-into-selection",
       name: "",
@@ -35,10 +48,15 @@ export default class UrlIntoSelection extends Plugin {
   }
 
   isUrl(text: string): boolean {
-    let urlRegex = new RegExp(
-      "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$"
-    );
+    let urlRegex = new RegExp(this.settings.regex);
     return urlRegex.test(text);
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+  async saveSettings() {
+    await this.saveData(this.settings);
   }
 
   private getEditor(): CodeMirror.Editor {
@@ -72,5 +90,30 @@ export default class UrlIntoSelection extends Plugin {
       start: { line: cursor.line, ch: startCh },
       end: { line: cursor.line, ch: endCh },
     };
+  }
+}
+
+class UrlIntoSelectionSettingsTab extends PluginSettingTab {
+  display() {
+    let { containerEl } = this;
+    const plugin: UrlIntoSelection = (this as any).plugin;
+
+    containerEl.empty();
+    containerEl.createEl("h2", { text: "URL-into-selection Settings" });
+
+    new Setting(containerEl)
+      .setName("Regular expression")
+      .setDesc("Regular expression used to match URLs in the clipboard.")
+      .addText((text) =>
+        text
+          .setPlaceholder("Enter regular expression here..")
+          .setValue(plugin.settings.regex)
+          .onChange(async (value) => {
+            if (value.length > 0) {
+              plugin.settings.regex = value;
+              await plugin.saveSettings();
+            }
+          })
+      );
   }
 }
