@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.0.0...v1.2.0) (2021-03-29)
+
+
+### Features
+
+* regular expression for URLs is now exposed in the settings ([6f8f50e](https://github.com/denolehov/obsidian-url-into-selection/commit/6f8f50e55e19758cd90f473678638a0f0c660f1c)), closes [#3](https://github.com/denolehov/obsidian-url-into-selection/issues/3) [#8](https://github.com/denolehov/obsidian-url-into-selection/issues/8)
+
 ## [1.1.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.0.0...v1.1.0) (2020-11-12)
 
 
