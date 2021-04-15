@@ -1,6 +1,8 @@
 # Paste URL into selection
 
-Insert links into a selected text "notion-style" (default hotkey is `ctrl + shift + v`).
+Insert links (URLs) into a selected text "notion-style" (default hotkey is `ctrl + shift + v`).
+
+Also works the other way around, inserts text into a selected link (URL).
 
 **NOTE:** Default hotkey might conflict with built-in shortcuts in your OS. 
 If that happens, you can change the plugin hotkey in `Settings` > `Hotkeys` > `Paste URL into selection`.
