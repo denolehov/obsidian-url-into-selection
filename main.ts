@@ -12,8 +12,7 @@ interface PluginSettings {
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
-  regex:
-    "^(http:\\/\\/www\\.|https:\\/\\/www\\.|http:\\/\\/|https:\\/\\/)?[a-z0-9]+([\\-.]{1}[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$",
+  regex: "^[a-z0-9-]+:(\/){2,3}[a-zA-Z0-9-]+",
 };
 
 export default class UrlIntoSelection extends Plugin {
