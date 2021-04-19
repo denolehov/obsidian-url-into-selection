@@ -30,19 +30,17 @@ export default class UrlIntoSelection extends Plugin {
 
     this.registerCodeMirror((cm: CodeMirror.Editor) => {
       cm.on("paste", (cm, e) => {
-        const clipboardText = e.clipboardData?.getData("text");
-        const selectedText = cm.getSelection();
-        if (selectedText && clipboardText) {
+        const clipboardText = (e.clipboardData?.getData("text") || '').trim();
+        const selectedText = (UrlIntoSelection.getSelectedText(cm) || '').trim();
 
-          if (this.isUrl(clipboardText)) {
-            // disable default copy behavior
-            e.preventDefault();
-            cm.replaceSelection(`[${selectedText}](${clipboardText})`);
-          } else if (this.isUrl(selectedText)) {
-            // disable default copy behavior
-            e.preventDefault();
-            cm.replaceSelection(`[${clipboardText}](${selectedText})`);
-          }
+        if (this.isUrl(clipboardText)) {
+          // disable default copy behavior
+          e.preventDefault();
+          cm.replaceSelection(`[${selectedText}](${clipboardText})`);
+        } else if (this.isUrl(selectedText)) {
+          // disable default copy behavior
+          e.preventDefault();
+          cm.replaceSelection(`[${clipboardText}](${selectedText})`);
         }
       });
     });
