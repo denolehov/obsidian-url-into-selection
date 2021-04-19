@@ -25,13 +25,15 @@ export default class UrlIntoSelection extends Plugin {
     this.addCommand({
       id: "paste-url-into-selection",
       name: "",
-      callback: () => this.urlIntoSelection()
+      callback: () => this.urlIntoSelection(),
     });
 
     this.registerCodeMirror((cm: CodeMirror.Editor) => {
       cm.on("paste", (cm, e) => {
-        const clipboardText = (e.clipboardData?.getData("text") || '').trim();
-        const selectedText = (UrlIntoSelection.getSelectedText(cm) || '').trim();
+        const clipboardText = (e.clipboardData?.getData("text") || "").trim();
+        const selectedText = (
+          UrlIntoSelection.getSelectedText(cm) || ""
+        ).trim();
 
         if (this.isUrl(clipboardText)) {
           // disable default copy behavior
@@ -48,8 +50,8 @@ export default class UrlIntoSelection extends Plugin {
 
   urlIntoSelection(): void {
     let editor = this.getEditor();
-    let selectedText = (UrlIntoSelection.getSelectedText(editor) || '').trim();
-    let clipboardText = (clipboard.readText("clipboard") || '').trim();
+    let selectedText = (UrlIntoSelection.getSelectedText(editor) || "").trim();
+    let clipboardText = (clipboard.readText("clipboard") || "").trim();
 
     if (this.isUrl(clipboardText)) {
       editor.replaceSelection(`[${selectedText}](${clipboardText})`);
@@ -72,10 +74,9 @@ export default class UrlIntoSelection extends Plugin {
 
   private getEditor(): CodeMirror.Editor {
     let activeLeaf = this.app.workspace.activeLeaf;
-    if (activeLeaf.view instanceof MarkdownView){
+    if (activeLeaf.view instanceof MarkdownView) {
       return activeLeaf.view.sourceMode.cmEditor;
-    }
-    else throw new Error("activeLeaf.view not MarkdownView")
+    } else throw new Error("activeLeaf.view not MarkdownView");
   }
 
   private static getSelectedText(editor: CodeMirror.Editor): string {
