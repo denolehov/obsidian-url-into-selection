@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.1.0...v1.3.0) (2021-04-19)
+
+
+### Features
+
+* add behavior to native pastes ([9d76f2f](https://github.com/denolehov/obsidian-url-into-selection/commit/9d76f2fb36dcf5bfc228bf6c2102fcb995e9a859))
+* ignore leading whitespace in URL ([#5](https://github.com/denolehov/obsidian-url-into-selection/issues/5)) ([a13a5e4](https://github.com/denolehov/obsidian-url-into-selection/commit/a13a5e4662a9debba920a04034841241a41dcaca))
+
+
+### Bug Fixes
+
+* fix issues with referse pasting ([96f1626](https://github.com/denolehov/obsidian-url-into-selection/commit/96f1626de27828f6d5f376561ac4037a77a4f1fe))
+* remove default hotkey to avoid possible conflict ([e414f46](https://github.com/denolehov/obsidian-url-into-selection/commit/e414f463bc78ac1464f745471da9e66f9a652487))
+
 ## [1.2.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.0.0...v1.2.0) (2021-03-29)
 
 
