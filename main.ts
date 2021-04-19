@@ -1,4 +1,4 @@
-import { Plugin, PluginSettingTab, Setting } from "obsidian";
+import { MarkdownView, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { clipboard } from "electron";
 import * as CodeMirror from "codemirror";
 
@@ -25,13 +25,7 @@ export default class UrlIntoSelection extends Plugin {
     this.addCommand({
       id: "paste-url-into-selection",
       name: "",
-      callback: () => this.urlIntoSelection(),
-      hotkeys: [
-        {
-          modifiers: ["Mod", "Shift"],
-          key: "v",
-        },
-      ],
+      callback: () => this.urlIntoSelection()
     });
 
     this.registerCodeMirror((cm: CodeMirror.Editor) => {
@@ -79,8 +73,11 @@ export default class UrlIntoSelection extends Plugin {
   }
 
   private getEditor(): CodeMirror.Editor {
-    let activeLeaf: any = this.app.workspace.activeLeaf;
-    return activeLeaf.view.sourceMode.cmEditor;
+    let activeLeaf = this.app.workspace.activeLeaf;
+    if (activeLeaf.view instanceof MarkdownView){
+      return activeLeaf.view.sourceMode.cmEditor;
+    }
+    else throw new Error("activeLeaf.view not MarkdownView")
   }
 
   private static getSelectedText(editor: CodeMirror.Editor): string {
