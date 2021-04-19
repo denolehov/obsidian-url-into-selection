@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.1.0...v1.4.0) (2021-04-19)
+
+
+### Features
+
+* change default regex to support file links ([#3](https://github.com/denolehov/obsidian-url-into-selection/issues/3)) ([8c6b435](https://github.com/denolehov/obsidian-url-into-selection/commit/8c6b435e6eda075ce7d1ff720ba9a1cdb754c2e9))
+
+
 ## [1.3.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.1.0...v1.3.0) (2021-04-19)
 
 
