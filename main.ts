@@ -52,7 +52,15 @@ export default class UrlIntoSelection extends Plugin {
 
   private isUrl(text: string): boolean {
     let urlRegex = new RegExp(this.settings.regex);
-    return urlRegex.test(text);
+    
+    try {
+      // throw TypeError: Invaild URL if not vaild
+      new URL(text);
+      return true;
+    } catch (error) {
+      // fallback test allows url without protocol (http,file...)
+      return urlRegex.test(text);
+    }
   }
 
   /**

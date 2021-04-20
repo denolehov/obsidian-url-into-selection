@@ -27,8 +27,8 @@ export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: "URL-into-selection Settings" });
 
     new Setting(containerEl)
-      .setName("Regular expression")
-      .setDesc("Regular expression used to match URLs in the clipboard.")
+      .setName("Fallback Regular expression")
+      .setDesc("Regular expression used to match URLs when default match fails.")
       .addText((text) =>
         text
           .setPlaceholder("Enter regular expression here..")
