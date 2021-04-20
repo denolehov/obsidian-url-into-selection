@@ -1,10 +1,10 @@
 import UrlIntoSelection from "main";
 import { PluginSettingTab, Setting } from "obsidian";
 
-
-export enum NothingSelected {
+export const enum NothingSelected {
   doNothing,
   autoSelect,
+  insertInline,
 }
 
 export interface PluginSettings {
@@ -13,7 +13,8 @@ export interface PluginSettings {
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
-  regex: /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.source,
+  regex: /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
+    .source,
   nothingSelected: NothingSelected.doNothing,
 };
 
@@ -42,22 +43,23 @@ export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Behavior on pasting URL when nothing is selected")
       .setDesc(
-        "Automatically select word surrounding the cursor when nothing is selected"
+        "Auto Select: Automatically select word surrounding the cursor"
       )
-      .addDropdown((dropdown)=>{
-        for (var enumMember in NothingSelected) {
-          var isValueProperty = parseInt(enumMember, 10) >= 0
-          if (isValueProperty) {
-             dropdown.addOption(enumMember,NothingSelected[enumMember])
-          }
-       }
-       dropdown
-         .setValue(plugin.settings.nothingSelected.toString())
-         .onChange(async (value) => {
-           plugin.settings.nothingSelected = +value;
-           await plugin.saveSettings();
-           this.display();
-         });
+      .addDropdown((dropdown) => {
+        const options: Record<NothingSelected, string> = {
+          0: "Do nothing",
+          1: "Auto Select",
+          2: "Insert [](url)",
+        };
+
+        dropdown
+          .addOptions(options)
+          .setValue(plugin.settings.nothingSelected.toString())
+          .onChange(async (value) => {
+            plugin.settings.nothingSelected = +value;
+            await plugin.saveSettings();
+            this.display();
+          });
       });
   }
 }

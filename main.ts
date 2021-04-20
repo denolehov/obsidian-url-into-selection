@@ -1,6 +1,7 @@
 import { MarkdownView, Plugin } from "obsidian";
 import * as CodeMirror from "codemirror";
 import { PluginSettings, UrlIntoSelectionSettingsTab, DEFAULT_SETTINGS, NothingSelected } from "setting";
+import {assertNever} from "assert-never";
 
 interface WordBoundaries {
   start: { line: number; ch: number };
@@ -22,18 +23,14 @@ export default class UrlIntoSelection extends Plugin {
         this.urlIntoSelection(
           editor,
           clipboardText,
-          this.settings.nothingSelected === NothingSelected.autoSelect
+          this.settings.nothingSelected
         );
       },
     });
 
     this.registerCodeMirror((cm: CodeMirror.Editor) => {
       cm.on("paste", (cm, e) =>
-        this.urlIntoSelection(
-          cm,
-          e,
-          this.settings.nothingSelected === NothingSelected.autoSelect
-        )
+        this.urlIntoSelection(cm, e, this.settings.nothingSelected)
       );
     });
   }
@@ -65,7 +62,7 @@ export default class UrlIntoSelection extends Plugin {
   private urlIntoSelection(
     cm: CodeMirror.Editor,
     cbString: string,
-    autoselect: boolean
+    nothingSelected: NothingSelected
   ): void;
   /**
    * @param cm CodeMirror Instance
@@ -74,21 +71,34 @@ export default class UrlIntoSelection extends Plugin {
   private urlIntoSelection(
     cm: CodeMirror.Editor,
     cbEvent: ClipboardEvent,
-    autoselect: boolean
+    nothingSelected: NothingSelected
   ): void;
   private urlIntoSelection(
     cm: CodeMirror.Editor,
     cb: string | ClipboardEvent,
-    autoselect: boolean
+    nothingSelected: NothingSelected
   ): void {
     let selectedText: string | null = null;
     let word: WordBoundaries | null = null;
+    let replaceText : string;
 
     if (cm.somethingSelected()) {
       selectedText = cm.getSelection().trim();
-    } else if (autoselect) {
-      word = getWordBoundaries(cm);
-      selectedText = cm.getRange(word.start, word.end);
+    } else {
+      switch (nothingSelected) {
+        case NothingSelected.doNothing:
+          break;
+        case NothingSelected.autoSelect:
+          word = getWordBoundaries(cm);
+          selectedText = cm.getRange(word.start, word.end);
+          break;
+        case NothingSelected.insertInline:
+          word = getCursor(cm);
+          selectedText = "";
+          break;
+        default:
+          assertNever(nothingSelected);
+      }
     }
 
     const clipboardText = (typeof cb === "string"
@@ -96,7 +106,7 @@ export default class UrlIntoSelection extends Plugin {
       : cb.clipboardData.getData("text")
     ).trim();
 
-    if (selectedText) {
+    if (typeof selectedText === "string") {
       if (this.isUrl(clipboardText)) {
         // disable default copy behavior
         if (typeof cb !== "string") cb.preventDefault();
@@ -125,6 +135,9 @@ function getWordBoundaries(editor: CodeMirror.Editor): WordBoundaries {
   return wordBoundaries;
 }
 
+function getCursor(editor: CodeMirror.Editor): WordBoundaries {
+  return { start: editor.getCursor(), end: editor.getCursor() };
+}
 function replace(
   cm: CodeMirror.Editor,
   replaceText: string,
