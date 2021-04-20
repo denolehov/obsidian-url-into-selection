@@ -9,10 +9,12 @@ interface WordBoundaries {
 
 interface PluginSettings {
   regex: string;
+  autoselect: boolean;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
-  regex: "^[a-z0-9-]+:(\/){2,3}[a-zA-Z0-9-]+",
+  regex: "^[a-z0-9-]+:(/){2,3}[a-zA-Z0-9-]+",
+  autoselect: false,
 };
 
 export default class UrlIntoSelection extends Plugin {
@@ -24,49 +26,24 @@ export default class UrlIntoSelection extends Plugin {
     this.addCommand({
       id: "paste-url-into-selection",
       name: "",
-      callback: () => this.urlIntoSelection(),
+      callback: () => {
+        const editor = this.getEditor();
+        const clipboardText = clipboard.readText();
+        this.urlIntoSelection(editor, clipboardText, this.settings.autoselect);
+      },
     });
 
     this.registerCodeMirror((cm: CodeMirror.Editor) => {
-      cm.on("paste", (cm, e) => {
-        const clipboardText = (e.clipboardData?.getData("text") || "").trim();
-        const selectedText = (
-          UrlIntoSelection.getSelectedText(cm) || ""
-        ).trim();
-
-        if (this.isUrl(clipboardText)) {
-          // disable default copy behavior
-          e.preventDefault();
-          cm.replaceSelection(`[${selectedText}](${clipboardText})`);
-        } else if (this.isUrl(selectedText)) {
-          // disable default copy behavior
-          e.preventDefault();
-          cm.replaceSelection(`[${clipboardText}](${selectedText})`);
-        }
-      });
+      cm.on("paste", (cm, e) =>
+        this.urlIntoSelection(cm, e, this.settings.autoselect)
+      );
     });
-  }
-
-  urlIntoSelection(): void {
-    let editor = this.getEditor();
-    let selectedText = (UrlIntoSelection.getSelectedText(editor) || "").trim();
-    let clipboardText = (clipboard.readText("clipboard") || "").trim();
-
-    if (this.isUrl(clipboardText)) {
-      editor.replaceSelection(`[${selectedText}](${clipboardText})`);
-    } else if (this.isUrl(selectedText)) {
-      editor.replaceSelection(`[${clipboardText}](${selectedText})`);
-    }
-  }
-
-  isUrl(text: string): boolean {
-    let urlRegex = new RegExp(this.settings.regex);
-    return urlRegex.test(text);
   }
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
+
   async saveSettings() {
     await this.saveData(this.settings);
   }
@@ -78,32 +55,60 @@ export default class UrlIntoSelection extends Plugin {
     } else throw new Error("activeLeaf.view not MarkdownView");
   }
 
-  private static getSelectedText(editor: CodeMirror.Editor): string {
-    if (!editor.somethingSelected()) {
-      let wordBoundaries = UrlIntoSelection.getWordBoundaries(editor);
-      editor.getDoc().setSelection(wordBoundaries.start, wordBoundaries.end);
-    }
-    return editor.getSelection();
+  private isUrl(text: string): boolean {
+    let urlRegex = new RegExp(this.settings.regex);
+    return urlRegex.test(text);
   }
 
-  private static getWordBoundaries(editor: CodeMirror.Editor): WordBoundaries {
-    let startCh, endCh: number;
-    let cursor = editor.getCursor();
+  /**
+   * @param cm CodeMirror Instance
+   * @param cbString text on clipboard
+   */
+  private urlIntoSelection(
+    cm: CodeMirror.Editor,
+    cbString: string,
+    autoselect: boolean
+  ): void;
+  /**
+   * @param cm CodeMirror Instance
+   * @param cbEvent clipboard event
+   */
+  private urlIntoSelection(
+    cm: CodeMirror.Editor,
+    cbEvent: ClipboardEvent,
+    autoselect: boolean
+  ): void;
+  private urlIntoSelection(
+    cm: CodeMirror.Editor,
+    cb: string | ClipboardEvent,
+    autoselect: boolean
+  ): void {
+    let selectedText: string | null = null;
+    let word: WordBoundaries | null = null;
 
-    if (editor.getTokenTypeAt(cursor) === "url") {
-      let token = editor.getTokenAt(cursor);
-      startCh = token.start;
-      endCh = token.end;
-    } else {
-      let word = editor.findWordAt(cursor);
-      startCh = word.anchor.ch;
-      endCh = word.head.ch;
+    if (cm.somethingSelected()) {
+      selectedText = cm.getSelection().trim();
+    } else if (autoselect) {
+      word = getWordBoundaries(cm);
+      selectedText = cm.getRange(word.start, word.end);
     }
 
-    return {
-      start: { line: cursor.line, ch: startCh },
-      end: { line: cursor.line, ch: endCh },
-    };
+    const clipboardText = (typeof cb === "string"
+      ? cb
+      : cb.clipboardData.getData("text")
+    ).trim();
+
+    if (selectedText) {
+      if (this.isUrl(clipboardText)) {
+        // disable default copy behavior
+        if (typeof cb !== "string") cb.preventDefault();
+        replace(cm, `[${selectedText}](${clipboardText})`, word);
+      } else if (this.isUrl(selectedText)) {
+        // disable default copy behavior
+        if (typeof cb !== "string") cb.preventDefault();
+        replace(cm, `[${clipboardText}](${selectedText})`, word);
+      }
+    }
   }
 }
 
@@ -129,5 +134,43 @@ class UrlIntoSelectionSettingsTab extends PluginSettingTab {
             }
           })
       );
+    new Setting(containerEl)
+      .setName("Enable autoselect")
+      .setDesc(
+        "Automatically select word surrounding the cursor when nothing is selected"
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(plugin.settings.autoselect).onChange(async (value) => {
+          plugin.settings.autoselect = value;
+          await plugin.saveSettings();
+          this.display();
+        })
+      );
   }
+}
+
+function getWordBoundaries(editor: CodeMirror.Editor): WordBoundaries {
+  const cursor = editor.getCursor();
+
+  let wordBoundaries: WordBoundaries;
+  if (editor.getTokenTypeAt(cursor) === "url") {
+    const { start: startCh, end: endCh } = editor.getTokenAt(cursor);
+    const line = cursor.line;
+    wordBoundaries = { start: { line, ch: startCh }, end: { line, ch: endCh } };
+  } else {
+    const { anchor: start, head: end } = editor.findWordAt(cursor);
+    wordBoundaries = { start, end };
+  }
+  return wordBoundaries;
+}
+
+function replace(
+  cm: CodeMirror.Editor,
+  replaceText: string,
+  word?: WordBoundaries
+): void {
+  if (word && word.start && word.end)
+    cm.replaceRange(replaceText, word.start, word.end);
+  // if word is null or undefined
+  else cm.replaceSelection(replaceText);
 }
