@@ -1,5 +1,4 @@
 import { MarkdownView, Plugin, PluginSettingTab, Setting } from "obsidian";
-import { clipboard } from "electron";
 import * as CodeMirror from "codemirror";
 
 interface WordBoundaries {
@@ -26,9 +25,9 @@ export default class UrlIntoSelection extends Plugin {
     this.addCommand({
       id: "paste-url-into-selection",
       name: "",
-      callback: () => {
+      callback: async () => {
         const editor = this.getEditor();
-        const clipboardText = clipboard.readText();
+        const clipboardText = await navigator.clipboard.readText();
         this.urlIntoSelection(editor, clipboardText, this.settings.autoselect);
       },
     });

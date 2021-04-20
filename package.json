@@ -15,7 +15,6 @@
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
     "@rollup/plugin-typescript": "^6.0.0",
-    "@types/electron": "^1.6.10",
     "@types/node": "^14.14.2",
     "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
     "prettier": "2.1.2",
