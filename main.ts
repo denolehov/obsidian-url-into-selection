@@ -1,6 +1,6 @@
 import { MarkdownView, Plugin } from "obsidian";
 import * as CodeMirror from "codemirror";
-import { PluginSettings, UrlIntoSelectionSettingsTab, DEFAULT_SETTINGS } from "setting";
+import { PluginSettings, UrlIntoSelectionSettingsTab, DEFAULT_SETTINGS, NothingSelected } from "setting";
 
 interface WordBoundaries {
   start: { line: number; ch: number };
@@ -19,13 +19,21 @@ export default class UrlIntoSelection extends Plugin {
       callback: async () => {
         const editor = this.getEditor();
         const clipboardText = await navigator.clipboard.readText();
-        this.urlIntoSelection(editor, clipboardText, this.settings.autoselect);
+        this.urlIntoSelection(
+          editor,
+          clipboardText,
+          this.settings.nothingSelected === NothingSelected.autoSelect
+        );
       },
     });
 
     this.registerCodeMirror((cm: CodeMirror.Editor) => {
       cm.on("paste", (cm, e) =>
-        this.urlIntoSelection(cm, e, this.settings.autoselect)
+        this.urlIntoSelection(
+          cm,
+          e,
+          this.settings.nothingSelected === NothingSelected.autoSelect
+        )
       );
     });
   }

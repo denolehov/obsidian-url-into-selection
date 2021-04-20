@@ -1,16 +1,21 @@
 import UrlIntoSelection from "main";
 import { PluginSettingTab, Setting } from "obsidian";
 
+
+export enum NothingSelected {
+  doNothing,
+  autoSelect,
+}
+
 export interface PluginSettings {
   regex: string;
-  autoselect: boolean;
+  nothingSelected: NothingSelected;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
   regex: /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.source,
-  autoselect: false,
+  nothingSelected: NothingSelected.doNothing,
 };
-
 
 export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
   display() {
@@ -35,16 +40,24 @@ export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
           })
       );
     new Setting(containerEl)
-      .setName("Enable autoselect")
+      .setName("Behavior on pasting URL when nothing is selected")
       .setDesc(
         "Automatically select word surrounding the cursor when nothing is selected"
       )
-      .addToggle((toggle) =>
-        toggle.setValue(plugin.settings.autoselect).onChange(async (value) => {
-          plugin.settings.autoselect = value;
-          await plugin.saveSettings();
-          this.display();
-        })
-      );
+      .addDropdown((dropdown)=>{
+        for (var enumMember in NothingSelected) {
+          var isValueProperty = parseInt(enumMember, 10) >= 0
+          if (isValueProperty) {
+             dropdown.addOption(enumMember,NothingSelected[enumMember])
+          }
+       }
+       dropdown
+         .setValue(plugin.settings.nothingSelected.toString())
+         .onChange(async (value) => {
+           plugin.settings.nothingSelected = +value;
+           await plugin.saveSettings();
+           this.display();
+         });
+      });
   }
 }
