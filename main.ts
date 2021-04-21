@@ -86,44 +86,73 @@ export default class UrlIntoSelection extends Plugin {
     cb: string | ClipboardEvent,
     nothingSelected: NothingSelected
   ): void {
-    let selectedText: string | null = null;
-    let word: WordBoundaries | null = null;
-    let replaceText : string;
+
+    // skip all if nothing should be done
+    if (
+      !cm.somethingSelected() &&
+      nothingSelected === NothingSelected.doNothing
+    )
+      return;
+
+    if (typeof cb !== "string" && cb.clipboardData===null){
+      console.error("empty clipboardData in ClipboardEvent")
+      return;
+    }
+
+    // Get clipboardText
+    let clipboardText : string;
+
+    if (typeof cb === "string"){
+      clipboardText = cb;
+    } else {
+      if (cb.clipboardData===null){
+        console.error("empty clipboardData in ClipboardEvent")
+        return;
+      } else {
+        clipboardText = cb.clipboardData.getData("text");
+      }
+    }
+    
+    clipboardText = clipboardText.trim();
+    
+    // Get selectedText and replaceRange
+    let selectedText: string;
+    let replaceRange: WordBoundaries | null;
 
     if (cm.somethingSelected()) {
       selectedText = cm.getSelection().trim();
+      replaceRange = null;
     } else {
       switch (nothingSelected) {
-        case NothingSelected.doNothing:
-          break;
         case NothingSelected.autoSelect:
-          word = getWordBoundaries(cm);
-          selectedText = cm.getRange(word.start, word.end);
+          replaceRange = getWordBoundaries(cm);
+          selectedText = cm.getRange(replaceRange.start, replaceRange.end);
           break;
         case NothingSelected.insertInline:
-          word = getCursor(cm);
+          replaceRange = getCursor(cm);
           selectedText = "";
           break;
+        case NothingSelected.doNothing:
+          throw new Error("should be skipped")
         default:
           assertNever(nothingSelected);
       }
     }
 
-    const clipboardText = (typeof cb === "string"
-      ? cb
-      : cb.clipboardData.getData("text")
-    ).trim();
+    // Get replaceText
+    let replaceText : string | undefined;
 
-    if (typeof selectedText === "string") {
-      if (this.isUrl(clipboardText)) {
-        // disable default copy behavior
-        if (typeof cb !== "string") cb.preventDefault();
-        replace(cm, `[${selectedText}](${clipboardText})`, word);
-      } else if (this.isUrl(selectedText)) {
-        // disable default copy behavior
-        if (typeof cb !== "string") cb.preventDefault();
-        replace(cm, `[${clipboardText}](${selectedText})`, word);
-      }
+    if (this.isUrl(clipboardText)) {
+      replaceText = `[${selectedText}](${clipboardText})`;
+    } else if (this.isUrl(selectedText)) {
+      replaceText = `[${clipboardText}](${selectedText})`;
+    }
+
+    // apply changes
+    if (replaceText){
+      // disable default copy behavior
+      if (typeof cb !== "string") cb.preventDefault();
+      replace(cm, replaceText, replaceRange);
     }
   }
 }
@@ -146,13 +175,15 @@ function getWordBoundaries(editor: CodeMirror.Editor): WordBoundaries {
 function getCursor(editor: CodeMirror.Editor): WordBoundaries {
   return { start: editor.getCursor(), end: editor.getCursor() };
 }
+
+
 function replace(
   cm: CodeMirror.Editor,
   replaceText: string,
-  word?: WordBoundaries
+  replaceRange: WordBoundaries | null = null
 ): void {
-  if (word && word.start && word.end)
-    cm.replaceRange(replaceText, word.start, word.end);
+  if (replaceRange && replaceRange.start && replaceRange.end)
+    cm.replaceRange(replaceText, replaceRange.start, replaceRange.end);
   // if word is null or undefined
   else cm.replaceSelection(replaceText);
 }
