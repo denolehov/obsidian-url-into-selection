@@ -10,12 +10,14 @@ export const enum NothingSelected {
 export interface PluginSettings {
   regex: string;
   nothingSelected: NothingSelected;
+  listForImgEmbed: string;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
   regex: /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
     .source,
   nothingSelected: NothingSelected.doNothing,
+  listForImgEmbed: ""
 };
 
 export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
@@ -60,6 +62,25 @@ export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
             await plugin.saveSettings();
             this.display();
           });
+      });
+      new Setting(containerEl)
+      .setName('Whitelist for image embed syntax')
+      .setDesc(createFragment(el=>{
+        el.appendText("![selection](url) will be used for URL that matches the following list");
+        el.createEl('br');
+        el.appendText("rules are regex-based, split by line break")
+      }))
+      .addTextArea((text) => {
+        text
+          .setPlaceholder('Example:\nyoutu\.?be|vimeo')
+          .setValue(plugin.settings.listForImgEmbed)
+          .onChange((value) => {
+            plugin.settings.listForImgEmbed = value;
+            plugin.saveData(plugin.settings);
+            return text;
+          })
+        text.inputEl.rows = 6;
+        text.inputEl.cols = 25;
       });
   }
 }

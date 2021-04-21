@@ -50,19 +50,6 @@ export default class UrlIntoSelection extends Plugin {
     } else throw new Error("activeLeaf.view not MarkdownView");
   }
 
-  private isUrl(text: string): boolean {
-    let urlRegex = new RegExp(this.settings.regex);
-    
-    try {
-      // throw TypeError: Invaild URL if not vaild
-      new URL(text);
-      return true;
-    } catch (error) {
-      // fallback test allows url without protocol (http,file...)
-      return urlRegex.test(text);
-    }
-  }
-
   /**
    * @param cm CodeMirror Instance
    * @param cbString text on clipboard
@@ -142,10 +129,42 @@ export default class UrlIntoSelection extends Plugin {
     // Get replaceText
     let replaceText : string | undefined;
 
-    if (this.isUrl(clipboardText)) {
-      replaceText = `[${selectedText}](${clipboardText})`;
-    } else if (this.isUrl(selectedText)) {
-      replaceText = `[${clipboardText}](${selectedText})`;
+    const isUrl = (text: string): boolean => {
+      let urlRegex = new RegExp(this.settings.regex);
+      try {
+        // throw TypeError: Invaild URL if not vaild
+        new URL(text);
+        return true;
+      } catch (error) {
+        // fallback test allows url without protocol (http,file...)
+        return urlRegex.test(text);
+      }
+    }
+
+    function isImgEmbed(text:string,ruleStr:string): boolean {
+      const rules = ruleStr.split('\n').map(v=>new RegExp(v));
+      for (const reg of rules) {
+        if (reg.test(text)) return true;
+      }
+      return false;
+    }
+
+    if (isUrl(clipboardText)) {
+      const imgEmbedMark = isImgEmbed(
+        clipboardText,
+        this.settings.listForImgEmbed
+      )
+        ? "!"
+        : "";
+      replaceText = imgEmbedMark + `[${selectedText}](${clipboardText})`;
+    } else if (isUrl(selectedText)) {
+      const imgEmbedMark = isImgEmbed(
+        clipboardText,
+        this.settings.listForImgEmbed
+      )
+        ? "!"
+        : "";
+      replaceText = imgEmbedMark + `[${clipboardText}](${selectedText})`;
     }
 
     // apply changes
