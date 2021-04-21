@@ -9,7 +9,7 @@ interface WordBoundaries {
 
 // https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s18.html
 const win32Path = /^[a-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/i;
-const unixPath = /^(?:\/[^/]+)*\/?$/i;
+const unixPath = /^(?:\/[^/]+)+\/?$/i;
 const testFilePath = (url:string) => win32Path.test(url) || unixPath.test(url);
 
 /**
@@ -49,10 +49,12 @@ export default function UrlIntoSelection(
 
   const clipboardText = getCbText(cb);
   if (clipboardText === null) return;
+  console.log(clipboardText)
 
   const { selectedText, replaceRange } = getSelnRange(cm, settings);
-
+  console.log(selectedText, replaceRange)
   const replaceText = getReplaceText(clipboardText, selectedText, settings);
+  console.log(replaceText)
   if (replaceText === null) return;
 
   // apply changes
@@ -93,6 +95,7 @@ function getReplaceText(
   settings: PluginSettings
 ): string | null {
   const isUrl = (text: string): boolean => {
+    if (text === "") return false;
     try {
       // throw TypeError: Invaild URL if not vaild
       new URL(text);
