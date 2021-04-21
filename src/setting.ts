@@ -1,4 +1,4 @@
-import UrlIntoSelection from "main";
+import UrlIntoSel_Plugin from "main";
 import { PluginSettingTab, Setting } from "obsidian";
 
 export const enum NothingSelected {
@@ -24,7 +24,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
   display() {
     let { containerEl } = this;
-    const plugin: UrlIntoSelection = (this as any).plugin;
+    const plugin: UrlIntoSel_Plugin = (this as any).plugin;
 
     containerEl.empty();
     containerEl.createEl("h2", { text: "URL-into-selection Settings" });
