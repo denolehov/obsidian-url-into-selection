@@ -116,6 +116,7 @@ export default class UrlIntoSelection extends Plugin {
           selectedText = cm.getRange(replaceRange.start, replaceRange.end);
           break;
         case NothingSelected.insertInline:
+        case NothingSelected.insertBare:
           replaceRange = getCursor(cm);
           selectedText = "";
           break;
@@ -140,39 +141,39 @@ export default class UrlIntoSelection extends Plugin {
         return urlRegex.test(text);
       }
     }
-
-    function isImgEmbed(text:string,ruleStr:string): boolean {
-      const rules = ruleStr.split('\n').map(v=>new RegExp(v));
+    const isImgEmbed = (text:string): boolean => {
+      const rules = this.settings.listForImgEmbed.split('\n').map(v=>new RegExp(v));
       for (const reg of rules) {
         if (reg.test(text)) return true;
       }
       return false;
     }
 
+    let linktext: string;
+    let url: string;
+
     if (isUrl(clipboardText)) {
-      const imgEmbedMark = isImgEmbed(
-        clipboardText,
-        this.settings.listForImgEmbed
-      )
-        ? "!"
-        : "";
-      replaceText = imgEmbedMark + `[${selectedText}](${clipboardText})`;
-    } else if (isUrl(selectedText)) {
-      const imgEmbedMark = isImgEmbed(
-        clipboardText,
-        this.settings.listForImgEmbed
-      )
-        ? "!"
-        : "";
-      replaceText = imgEmbedMark + `[${clipboardText}](${selectedText})`;
+      linktext = selectedText;
+      url = clipboardText;
+    } else if (isUrl(selectedText)){
+      linktext = clipboardText;
+      url = selectedText;
+    } else return; // if neither of two is an URL, the following code would be skipped.
+
+    const imgEmbedMark = isImgEmbed(clipboardText) ? "!" : "";
+    
+    if (
+      selectedText === "" &&
+      this.settings.nothingSelected === NothingSelected.insertBare
+    ){
+      replaceText = `<${url}>`
+    } else {
+      replaceText = imgEmbedMark + `[${linktext}](${url})`;
     }
 
     // apply changes
-    if (replaceText){
-      // disable default copy behavior
-      if (typeof cb !== "string") cb.preventDefault();
-      replace(cm, replaceText, replaceRange);
-    }
+    if (typeof cb !== "string") cb.preventDefault(); // disable default copy behavior
+    replace(cm, replaceText, replaceRange);
   }
 }
 

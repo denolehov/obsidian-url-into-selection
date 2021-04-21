@@ -5,6 +5,7 @@ export const enum NothingSelected {
   doNothing,
   autoSelect,
   insertInline,
+  insertBare,
 }
 
 export interface PluginSettings {
@@ -52,6 +53,7 @@ export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
           0: "Do nothing",
           1: "Auto Select",
           2: "Insert [](url)",
+          3: "Insert <url>"
         };
 
         dropdown
