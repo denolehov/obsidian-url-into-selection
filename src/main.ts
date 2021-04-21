@@ -10,8 +10,6 @@ import {
 export default class UrlIntoSel_Plugin extends Plugin {
   settings: PluginSettings;
 
-  urlIntoSelection = UrlIntoSelection.bind(this) as typeof UrlIntoSelection;
-
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new UrlIntoSelectionSettingsTab(this.app, this));
@@ -21,13 +19,13 @@ export default class UrlIntoSel_Plugin extends Plugin {
       callback: async () => {
         const editor = this.getEditor();
         const clipboardText = await navigator.clipboard.readText();
-        this.urlIntoSelection(editor, clipboardText, this.settings.nothingSelected);
+        UrlIntoSelection(editor, clipboardText, this.settings);
       },
     });
 
     this.registerCodeMirror((cm: CodeMirror.Editor) => {
       cm.on("paste", (cm, e) =>
-        this.urlIntoSelection(cm, e, this.settings.nothingSelected)
+        UrlIntoSelection(cm, e, this.settings)
       );
     });
   }

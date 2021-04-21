@@ -1,6 +1,6 @@
 import assertNever from "assert-never";
 import UrlIntoSel_Plugin from "main";
-import { NothingSelected } from "setting";
+import { NothingSelected, PluginSettings } from "setting";
 
 interface WordBoundaries {
   start: { line: number; ch: number };
@@ -12,29 +12,26 @@ interface WordBoundaries {
  * @param cbString text on clipboard
  */
 export default function UrlIntoSelection(
-  this: UrlIntoSel_Plugin,
   cm: CodeMirror.Editor,
   cbString: string,
-  nothingSelected: NothingSelected
+  settings: PluginSettings
 ): void;
 /**
  * @param cm CodeMirror Instance
  * @param cbEvent clipboard event
  */
 export default function UrlIntoSelection(
-  this: UrlIntoSel_Plugin,
   cm: CodeMirror.Editor,
   cbEvent: ClipboardEvent,
-  nothingSelected: NothingSelected
+  settings: PluginSettings
 ): void;
 export default function UrlIntoSelection(
-  this: UrlIntoSel_Plugin,
   cm: CodeMirror.Editor,
   cb: string | ClipboardEvent,
-  nothingSelected: NothingSelected
+  settings: PluginSettings
 ): void {
   // skip all if nothing should be done
-  if (!cm.somethingSelected() && nothingSelected === NothingSelected.doNothing)
+  if (!cm.somethingSelected() && settings.nothingSelected === NothingSelected.doNothing)
     return;
 
   if (typeof cb !== "string" && cb.clipboardData === null) {
@@ -66,7 +63,7 @@ export default function UrlIntoSelection(
     selectedText = cm.getSelection().trim();
     replaceRange = null;
   } else {
-    switch (nothingSelected) {
+    switch (settings.nothingSelected) {
       case NothingSelected.autoSelect:
         replaceRange = getWordBoundaries(cm);
         selectedText = cm.getRange(replaceRange.start, replaceRange.end);
@@ -79,7 +76,7 @@ export default function UrlIntoSelection(
       case NothingSelected.doNothing:
         throw new Error("should be skipped");
       default:
-        assertNever(nothingSelected);
+        assertNever(settings.nothingSelected);
     }
   }
 
@@ -87,7 +84,7 @@ export default function UrlIntoSelection(
   let replaceText: string | undefined;
 
   const isUrl = (text: string): boolean => {
-    let urlRegex = new RegExp(this.settings.regex);
+    let urlRegex = new RegExp(settings.regex);
     try {
       // throw TypeError: Invaild URL if not vaild
       new URL(text);
@@ -98,7 +95,7 @@ export default function UrlIntoSelection(
     }
   };
   const isImgEmbed = (text: string): boolean => {
-    const rules = this.settings.listForImgEmbed
+    const rules = settings.listForImgEmbed
       .split("\n")
       .map((v) => new RegExp(v));
     for (const reg of rules) {
@@ -122,7 +119,7 @@ export default function UrlIntoSelection(
 
   if (
     selectedText === "" &&
-    this.settings.nothingSelected === NothingSelected.insertBare
+    settings.nothingSelected === NothingSelected.insertBare
   ) {
     replaceText = `<${url}>`;
   } else {
