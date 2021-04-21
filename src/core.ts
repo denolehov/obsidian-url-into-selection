@@ -1,11 +1,16 @@
 import assertNever from "assert-never";
-import UrlIntoSel_Plugin from "main";
 import { NothingSelected, PluginSettings } from "setting";
+import fileUrl from 'file-url';
 
 interface WordBoundaries {
   start: { line: number; ch: number };
   end: { line: number; ch: number };
 }
+
+// https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s18.html
+const win32Path = /^[a-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/i;
+const unixPath = /^(?:\/[^/]+)*\/?$/i;
+const testFilePath = (url:string) => win32Path.test(url) || unixPath.test(url);
 
 /**
  * @param cm CodeMirror Instance
@@ -88,14 +93,13 @@ function getReplaceText(
   settings: PluginSettings
 ): string | null {
   const isUrl = (text: string): boolean => {
-    let urlRegex = new RegExp(settings.regex);
     try {
       // throw TypeError: Invaild URL if not vaild
       new URL(text);
       return true;
     } catch (error) {
-      // fallback test allows url without protocol (http,file...)
-      return urlRegex.test(text);
+      // settings.regex: fallback test allows url without protocol (http,file...)
+      return testFilePath(text) || new RegExp(settings.regex).test(text); 
     }
   };
   const isImgEmbed = (text: string): boolean => {
@@ -121,6 +125,8 @@ function getReplaceText(
 
   const imgEmbedMark = isImgEmbed(clipboardText) ? "!" : "";
 
+  url = processUrl(url);
+
   if (
     selectedText === "" &&
     settings.nothingSelected === NothingSelected.insertBare
@@ -130,6 +136,16 @@ function getReplaceText(
     return imgEmbedMark + `[${linktext}](${url})`;
   }
 }
+
+/** Process file url etc */
+function processUrl(src: string): string {
+  if (testFilePath(src)){
+    return fileUrl(src, { resolve: false });
+  } else {
+    return src;
+  }
+}
+
 function getCbText(cb: string | ClipboardEvent): string | null {
   let clipboardText: string;
 
