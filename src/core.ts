@@ -31,7 +31,10 @@ export default function UrlIntoSelection(
   settings: PluginSettings
 ): void {
   // skip all if nothing should be done
-  if (!cm.somethingSelected() && settings.nothingSelected === NothingSelected.doNothing)
+  if (
+    !cm.somethingSelected() &&
+    settings.nothingSelected === NothingSelected.doNothing
+  )
     return;
 
   if (typeof cb !== "string" && cb.clipboardData === null) {
@@ -39,23 +42,20 @@ export default function UrlIntoSelection(
     return;
   }
 
-  // Get clipboardText
-  let clipboardText: string;
+  const clipboardText = getCbText(cb);
+  if (clipboardText === null) return;
 
-  if (typeof cb === "string") {
-    clipboardText = cb;
-  } else {
-    if (cb.clipboardData === null) {
-      console.error("empty clipboardData in ClipboardEvent");
-      return;
-    } else {
-      clipboardText = cb.clipboardData.getData("text");
-    }
-  }
+  const { selectedText, replaceRange } = getSelnRange(cm, settings);
 
-  clipboardText = clipboardText.trim();
+  const replaceText = getReplaceText(clipboardText, selectedText, settings);
+  if (replaceText === null) return;
 
-  // Get selectedText and replaceRange
+  // apply changes
+  if (typeof cb !== "string") cb.preventDefault(); // disable default copy behavior
+  replace(cm, replaceText, replaceRange);
+}
+
+function getSelnRange(cm: CodeMirror.Editor, settings: PluginSettings) {
   let selectedText: string;
   let replaceRange: WordBoundaries | null;
 
@@ -79,10 +79,14 @@ export default function UrlIntoSelection(
         assertNever(settings.nothingSelected);
     }
   }
+  return { selectedText, replaceRange };
+}
 
-  // Get replaceText
-  let replaceText: string | undefined;
-
+function getReplaceText(
+  clipboardText: string,
+  selectedText: string,
+  settings: PluginSettings
+): string | null {
   const isUrl = (text: string): boolean => {
     let urlRegex = new RegExp(settings.regex);
     try {
@@ -113,7 +117,7 @@ export default function UrlIntoSelection(
   } else if (isUrl(selectedText)) {
     linktext = clipboardText;
     url = selectedText;
-  } else return; // if neither of two is an URL, the following code would be skipped.
+  } else return null; // if neither of two is an URL, the following code would be skipped.
 
   const imgEmbedMark = isImgEmbed(clipboardText) ? "!" : "";
 
@@ -121,14 +125,25 @@ export default function UrlIntoSelection(
     selectedText === "" &&
     settings.nothingSelected === NothingSelected.insertBare
   ) {
-    replaceText = `<${url}>`;
+    return `<${url}>`;
   } else {
-    replaceText = imgEmbedMark + `[${linktext}](${url})`;
+    return imgEmbedMark + `[${linktext}](${url})`;
   }
+}
+function getCbText(cb: string | ClipboardEvent): string | null {
+  let clipboardText: string;
 
-  // apply changes
-  if (typeof cb !== "string") cb.preventDefault(); // disable default copy behavior
-  replace(cm, replaceText, replaceRange);
+  if (typeof cb === "string") {
+    clipboardText = cb;
+  } else {
+    if (cb.clipboardData === null) {
+      console.error("empty clipboardData in ClipboardEvent");
+      return null;
+    } else {
+      clipboardText = cb.clipboardData.getData("text");
+    }
+  }
+  return clipboardText.trim();
 }
 
 function getWordBoundaries(editor: CodeMirror.Editor): WordBoundaries {
