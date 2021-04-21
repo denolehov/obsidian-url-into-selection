@@ -49,17 +49,24 @@ export default function UrlIntoSelection(
 
   const clipboardText = getCbText(cb);
   if (clipboardText === null) return;
-  console.log(clipboardText)
 
   const { selectedText, replaceRange } = getSelnRange(cm, settings);
-  console.log(selectedText, replaceRange)
   const replaceText = getReplaceText(clipboardText, selectedText, settings);
-  console.log(replaceText)
   if (replaceText === null) return;
 
   // apply changes
   if (typeof cb !== "string") cb.preventDefault(); // disable default copy behavior
   replace(cm, replaceText, replaceRange);
+
+  if (
+    !cm.somethingSelected() &&
+    settings.nothingSelected === NothingSelected.insertInline
+  ) {
+    cm.setCursor({
+      ch: replaceRange.start.ch + 1,
+      line: replaceRange.start.line,
+    });
+  }
 }
 
 function getSelnRange(cm: CodeMirror.Editor, settings: PluginSettings) {
