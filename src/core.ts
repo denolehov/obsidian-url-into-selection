@@ -147,13 +147,19 @@ function getReplaceText(
   }
 }
 
-/** Process file url etc */
+/** Process file url, special characters, etc */
 function processUrl(src: string): string {
+  let output;
   if (testFilePath(src)){
-    return fileUrl(src, { resolve: false });
+    output = fileUrl(src, { resolve: false });
   } else {
-    return src;
+    output = src;
   }
+
+  if (/[<>]/.test(output))
+    output = output.replace("<", "%3C").replace(">", "%3E");
+
+  return /[\(\) ]/.test(output) ? `<${output}>` : output;
 }
 
 function getCbText(cb: string | ClipboardEvent): string | null {
