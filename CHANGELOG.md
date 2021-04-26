@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.1.0...v1.5.0) (2021-04-26)
+
+
+### Features
+
+* avoid unintentional auto selection [@AidenLx](https://github.com/AidenLx) ([d81319f](https://github.com/denolehov/obsidian-url-into-selection/commit/d81319f5ee6d8035c29cc4e497f1dc0125e70166)), closes [#12](https://github.com/denolehov/obsidian-url-into-selection/issues/12)
+
 ## [1.4.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.1.0...v1.4.0) (2021-04-19)
 
 
