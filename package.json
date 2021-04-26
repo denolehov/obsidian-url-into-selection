@@ -15,13 +15,22 @@
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
     "@rollup/plugin-typescript": "^6.0.0",
-    "@types/electron": "^1.6.10",
-    "@types/node": "^14.14.2",
+    "assert-never": "^1.2.1",
+    "commitizen": "^4.2.3",
+    "cz-conventional-changelog": "^3.3.0",
+    "file-url": "^4.0.0",
     "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
     "prettier": "2.1.2",
     "rollup": "^2.32.1",
+    "rollup-plugin-node-polyfills": "^0.2.1",
     "standard-version": "^9.0.0",
     "tslib": "^2.0.3",
-    "typescript": "^4.0.3"
+    "typescript": "^4.0.3",
+    "url-parse": "^1.5.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

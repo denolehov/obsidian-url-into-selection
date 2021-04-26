@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "src",
+    "outDir": "dist",
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
@@ -11,5 +12,6 @@
     "importHelpers": true,
     "lib": ["dom", "es5", "scripthost", "es2015"]
   },
-  "include": ["**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist"]
 }

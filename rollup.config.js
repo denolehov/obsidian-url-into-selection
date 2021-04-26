@@ -1,15 +1,16 @@
 import typescript from "@rollup/plugin-typescript";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
+import nodePolyfills from "rollup-plugin-node-polyfills";
 
 export default {
-  input: "main.ts",
+  input: "src/main.ts",
   output: {
     dir: ".",
     sourcemap: "inline",
     format: "cjs",
     exports: "default",
   },
-  external: ["obsidian", "electron"],
-  plugins: [typescript(), nodeResolve({ browser: true }), commonjs()],
+  external: ["obsidian"],
+  plugins: [typescript(), nodePolyfills(), nodeResolve({ browser: true }), commonjs()],
 };
