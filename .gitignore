@@ -12,3 +12,6 @@ main.js
 
 .prettierignore
 .prettierrc.json
+
+# settings
+data.json
