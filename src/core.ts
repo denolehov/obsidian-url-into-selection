@@ -1,6 +1,6 @@
 import assertNever from "assert-never";
 import { NothingSelected, PluginSettings } from "setting";
-import fileUrl from 'file-url';
+import fileUrl from "file-url";
 
 interface WordBoundaries {
   start: { line: number; ch: number };
@@ -10,7 +10,7 @@ interface WordBoundaries {
 // https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s18.html
 const win32Path = /^[a-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/i;
 const unixPath = /^(?:\/[^/]+)+\/?$/i;
-const testFilePath = (url:string) => win32Path.test(url) || unixPath.test(url);
+const testFilePath = (url: string) => win32Path.test(url) || unixPath.test(url);
 
 /**
  * @param cm CodeMirror Instance
@@ -111,13 +111,13 @@ function getReplaceText(
       return true;
     } catch (error) {
       // settings.regex: fallback test allows url without protocol (http,file...)
-      return testFilePath(text) || new RegExp(settings.regex).test(text); 
+      return testFilePath(text) || new RegExp(settings.regex).test(text);
     }
   };
   const isImgEmbed = (text: string): boolean => {
     const rules = settings.listForImgEmbed
       .split("\n")
-      .filter(v => v.length > 0)
+      .filter((v) => v.length > 0)
       .map((v) => new RegExp(v));
     for (const reg of rules) {
       if (reg.test(text)) return true;
@@ -153,7 +153,7 @@ function getReplaceText(
 /** Process file url, special characters, etc */
 function processUrl(src: string): string {
   let output;
-  if (testFilePath(src)){
+  if (testFilePath(src)) {
     output = fileUrl(src, { resolve: false });
   } else {
     output = src;

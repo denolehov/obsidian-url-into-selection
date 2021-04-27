@@ -1,6 +1,6 @@
 import { MarkdownView, Plugin } from "obsidian";
 import * as CodeMirror from "codemirror";
-import UrlIntoSelection from "./core"
+import UrlIntoSelection from "./core";
 import {
   PluginSettings,
   UrlIntoSelectionSettingsTab,
@@ -24,9 +24,7 @@ export default class UrlIntoSel_Plugin extends Plugin {
     });
 
     this.registerCodeMirror((cm: CodeMirror.Editor) => {
-      cm.on("paste", (cm, e) =>
-        UrlIntoSelection(cm, e, this.settings)
-      );
+      cm.on("paste", (cm, e) => UrlIntoSelection(cm, e, this.settings));
     });
   }
 
