@@ -115,6 +115,7 @@ function getReplaceText(
   const isImgEmbed = (text: string): boolean => {
     const rules = settings.listForImgEmbed
       .split("\n")
+      .filter(v => v.length > 0)
       .map((v) => new RegExp(v));
     for (const reg of rules) {
       if (reg.test(text)) return true;
