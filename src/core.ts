@@ -15,6 +15,7 @@ const testFilePath = (url:string) => win32Path.test(url) || unixPath.test(url);
 /**
  * @param cm CodeMirror Instance
  * @param cbString text on clipboard
+ * @param settings plugin settings
  */
 export default function UrlIntoSelection(
   cm: CodeMirror.Editor,
@@ -24,6 +25,7 @@ export default function UrlIntoSelection(
 /**
  * @param cm CodeMirror Instance
  * @param cbEvent clipboard event
+ * @param settings plugin settings
  */
 export default function UrlIntoSelection(
   cm: CodeMirror.Editor,
@@ -104,7 +106,7 @@ function getReplaceText(
   const isUrl = (text: string): boolean => {
     if (text === "") return false;
     try {
-      // throw TypeError: Invaild URL if not vaild
+      // throw TypeError: Invalid URL if not valid
       new URL(text);
       return true;
     } catch (error) {
