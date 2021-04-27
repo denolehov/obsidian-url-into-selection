@@ -46,7 +46,7 @@ export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Behavior on pasting URL when nothing is selected")
       .setDesc(
-        "Auto Select: Automatically select word surrounding the cursor"
+        "Auto Select: Automatically select word surrounding the cursor."
       )
       .addDropdown((dropdown) => {
         const options: Record<NothingSelected, string> = {
@@ -68,9 +68,9 @@ export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
       new Setting(containerEl)
       .setName('Whitelist for image embed syntax')
       .setDesc(createFragment(el=>{
-        el.appendText("![selection](url) will be used for URL that matches the following list");
+        el.appendText("![selection](url) will be used for URL that matches the following list.");
         el.createEl('br');
-        el.appendText("rules are regex-based, split by line break")
+        el.appendText("Rules are regex-based, split by line break.")
       }))
       .addTextArea((text) => {
         text
