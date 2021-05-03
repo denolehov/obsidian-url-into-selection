@@ -10,7 +10,12 @@ import {
 export default class UrlIntoSel_Plugin extends Plugin {
   settings: PluginSettings;
 
+  pasteHandler = (cm: CodeMirror.Editor, e: ClipboardEvent) =>
+    UrlIntoSelection(cm, e, this.settings);
+
   async onload() {
+    console.log("loading url-into-selection");
+
     await this.loadSettings();
     this.addSettingTab(new UrlIntoSelectionSettingsTab(this.app, this));
     this.addCommand({
@@ -24,8 +29,14 @@ export default class UrlIntoSel_Plugin extends Plugin {
     });
 
     this.registerCodeMirror((cm: CodeMirror.Editor) => {
-      cm.on("paste", (cm, e) => UrlIntoSelection(cm, e, this.settings));
+      cm.on("paste", this.pasteHandler);
     });
+  }
+
+  onunload() {
+    console.log("unloading url-into-selection");
+
+    this.registerCodeMirror((cm) => cm.off("paste", this.pasteHandler));
   }
 
   async loadSettings() {
