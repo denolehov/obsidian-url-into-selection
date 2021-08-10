@@ -15,38 +15,44 @@ In order to install this plugin, go to "Settings > Third Party Plugins > Paste U
 
 If you have any kind of feedback or questions, feel free to reach out via GitHub issues or `@evrwhr` on [Obsidian Discord server](https://discord.com/invite/veuWUTm).
 
+# To Use
+There's only 1 command: `Paste URL into selection:`.
+1. Copy a url to clipboard
+2. Select text within Obsidian
+3. Run command via `hotkey` or `command palette` (macOS CMD+P to open palette).
+
 ---
 
-### Settings
+# Settings
 To edit settings, open `Settings > Plugin Options > Paste URL into selection`
 
-#### 1. Fallback regular expression (uses `RegExp`)
+## 1. Fallback regular expression (uses `RegExp`)
 You can add Regular expressions of any style you want `[Highlighted Text](clipboard text/url)`
 
-##### Common Expressions
+### Common Expressions
 | title | RegExp | description |
 |-------|------|-------------|
 | *default* | `[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)` | URL starts with HTTP/HTTPS |
 
 
-#### 2. Behavior on pasting URL when nothing is selected
+## 2. Behavior on pasting URL when nothing is selected
 You can still use this plugin to do things when nothing is selected. *This only works when a url is copied to clipboard.*
 1. `Do nothing` **default**
 2. `Auto Select` If you have a URL copied to your clipboard, it has the same behavior as first selecting the closest word to your cursor and turning it into a URL, or Embeded url (depending on your settings). Now, you don't need to select text, but you still can.
 3. `Insert [](url)` This is useful when you want to paste a link, and then add text for it. It'll position the cursor
 4. `Insert <url>` This just inserts `<` and `>` characters around your clipboard url and pastes it where the cursor is selected.
 
-#### 3. Whitelist for image embed syntax
+## 3. Whitelist for image embed syntax
 You can add Regular expressions of any style of clipboard text you want, specially for embedding files in the format `![Highlighted Text](clipboard text/url)`
 
-##### Common Expressions
+### Common Expressions
 | title | RegExp | description |
 |-------|------|-------------|
 | *default* |  | Nothing is whitelisted |
 | image links | `(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*\.(?:jpg|gif|png))(?:\?([^#]*))?(?:#(.*))?` | Embeds images that have a .jpg|gif|png extension |
 | YT/Vimeo | `youtu.?be|vimeo` | Embeds YouTube and Vimeo links *(doesn't seem to currently show in Obsidian app)*|
 
-#### My Favorite Setting Selections:
+## My Favorite Setting Selections:
 1. Leave as default: `[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`
 2. Switch to `Auto Select`
 3. Add image link regex: `(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*\.(?:jpg|gif|png))(?:\?([^#]*))?(?:#(.*))?`
