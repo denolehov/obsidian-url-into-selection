@@ -139,6 +139,7 @@ function getReplaceText(
   const imgEmbedMark = isImgEmbed(clipboardText) ? "!" : "";
 
   url = processUrl(url);
+  url = decodeURI(url);
 
   if (
     selectedText === "" &&
@@ -146,7 +147,6 @@ function getReplaceText(
   ) {
     return `<${url}>`;
   } else {
-    url = decodeURI(url);
     return imgEmbedMark + `[${linktext}](${url})`;
   }
 }
