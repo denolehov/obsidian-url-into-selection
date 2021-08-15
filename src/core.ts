@@ -146,6 +146,7 @@ function getReplaceText(
   ) {
     return `<${url}>`;
   } else {
+    url = decodeURI(url);
     return imgEmbedMark + `[${linktext}](${url})`;
   }
 }
