@@ -2,9 +2,13 @@ import UrlIntoSel_Plugin from "main";
 import { PluginSettingTab, Setting } from "obsidian";
 
 export const enum NothingSelected {
+  /** Default paste behaviour */
   doNothing,
+  /** Automatically select word surrounding the cursor */
   autoSelect,
+  /** Insert `[](url)` */
   insertInline,
+  /** Insert `<url>` */
   insertBare,
 }
 

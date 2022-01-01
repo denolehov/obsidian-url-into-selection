@@ -19,7 +19,7 @@
     "commitizen": "^4.2.3",
     "cz-conventional-changelog": "^3.3.0",
     "file-url": "^4.0.0",
-    "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
+    "obsidian": "0.13.11",
     "prettier": "2.1.2",
     "rollup": "^2.32.1",
     "rollup-plugin-node-polyfills": "^0.2.1",
