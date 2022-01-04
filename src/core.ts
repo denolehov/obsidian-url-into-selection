@@ -57,7 +57,7 @@ function getSelnRange(editor: Editor, settings: PluginSettings) {
   } else {
     switch (settings.nothingSelected) {
       case NothingSelected.autoSelect:
-        replaceRange = getWordBoundaries(editor);
+        replaceRange = getWordBoundaries(editor, settings);
         selectedText = editor.getRange(replaceRange.from, replaceRange.to);
         break;
       case NothingSelected.insertInline:
@@ -162,16 +162,20 @@ function getCbText(cb: string | ClipboardEvent): string | null {
   return clipboardText.trim();
 }
 
-function getWordBoundaries(editor: Editor): EditorRange {
+function getWordBoundaries(editor: Editor, settings: PluginSettings): EditorRange {
   const cursor = editor.getCursor();
-  let wordBoundaries: EditorRange;
+  const line = editor.getLine(cursor.line);
+  let wordBoundaries = findWordAt(line, cursor);;
 
-  // if (editor.getTokenTypeAt(cursor) === "url") {
-  //   const { start: startCh, end: endCh } = editor.getTokenAt(cursor);
-  //   const line = cursor.line;
-  //   wordBoundaries = { from: { line, ch: startCh }, to: { line, ch: endCh } };
-  // } else 
-  wordBoundaries = findWordAt(editor.getLine(cursor.ch), cursor);;
+  // If the token the cursor is on is a url, grab the whole thing instead of just parsing it like a word
+  let start = wordBoundaries.from.ch;
+  let end = wordBoundaries.to.ch;
+  while (start > 0 && !/\s/.test(line.charAt(start - 1))) --start;
+  while (end < line.length && !/\s/.test(line.charAt(end))) ++end;
+  if (isUrl(line.slice(start, end), settings)) {
+    wordBoundaries.from.ch = start;
+    wordBoundaries.to.ch = end;
+  }
   return wordBoundaries;
 }
 
@@ -189,7 +193,6 @@ const findWordAt = (() => {
     let end = pos.ch;
     (end === line.length) ? --start : ++end;
     const startChar = line.charAt(pos.ch);
-
     if (isWordChar(startChar)) {
       check = (ch: string) => isWordChar(ch);
     } else if (/\s/.test(startChar)) {
