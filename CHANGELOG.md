@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0]
+
+### Bug Fixes
+* Fixed the plugin so that it works in live preview, closes [#33](https://github.com/denolehov/obsidian-url-into-selection/issues/33)
+
 ## [1.6.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.1.0...v1.6.0) (2021-04-27)
 
 
