@@ -86,6 +86,16 @@ function isUrl(text: string, settings: PluginSettings): boolean {
   }
 }
 
+function isWikiLink(text: string, settings: PluginSettings): boolean {
+  // if any wiki link already has a text substitute, ignore it
+  return text.startsWith("[[" ) && text.endsWith("]]") && !text.includes("|") && !text.includes("\\")
+    && !text.includes("/") && !text.includes(":")
+}
+
+function stripWikiLink(link: string, settings: PluginSettings): string {
+  return link.substring(2, link.length - 2) // [[link]] -> link
+}
+
 function isImgEmbed(text: string, settings: PluginSettings): boolean {
   const rules = settings.listForImgEmbed
     .split("\n")
@@ -111,6 +121,7 @@ function getReplaceText(clipboardText: string, selectedText: string, settings: P
 
   let linktext: string;
   let url: string;
+  let iswikilink: boolean = false;
 
   if (isUrl(clipboardText, settings)) {
     linktext = selectedText;
@@ -118,9 +129,25 @@ function getReplaceText(clipboardText: string, selectedText: string, settings: P
   } else if (isUrl(selectedText, settings)) {
     linktext = clipboardText;
     url = selectedText;
+  } else if (isWikiLink(clipboardText, settings)) {
+    linktext = selectedText;
+    url = clipboardText;
+    iswikilink = true;
+  } else if (isWikiLink(selectedText, settings)) {
+    linktext = clipboardText;
+    url = selectedText;
+    iswikilink = true;
   } else return null; // if neither of two is an URL, the following code would be skipped.
 
   const imgEmbedMark = isImgEmbed(clipboardText, settings) ? "!" : "";
+
+  if (iswikilink) {
+    if (selectedText === "" && settings.nothingSelected === NothingSelected.insertBare) { // delete?
+      return `${url}`;
+    } else {
+      return imgEmbedMark + `[[${stripWikiLink(url, settings)}|${linktext}]]`;
+    }
+  }
 
   url = processUrl(url);
 
