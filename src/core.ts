@@ -140,8 +140,12 @@ function processUrl(src: string): string {
     output = src;
   }
 
-  if (/[<>]/.test(output))
-    output = output.replace("<", "%3C").replace(">", "%3E");
+  output = output
+      .replace(/</g, "%3C")
+      .replace(/>/g, "%3E")
+      // Markdown uses brackets to enclose URLs. Escape them.
+      .replace(/\(/g, "%28")
+      .replace(/\)/g, "%29");
 
   return /[\(\) ]/.test(output) ? `<${output}>` : output;
 }
