@@ -139,7 +139,10 @@ function getReplaceText(
   const imgEmbedMark = isImgEmbed(clipboardText) ? "!" : "";
 
   url = processUrl(url);
-  url = decodeURI(url).replace(/ /g, "%20");
+  url = decodeURI(url);
+  if (/\s/g.test(url) && !(url.startsWith("<") || url.endsWith(">"))) {
+    url = "<" + url + ">";
+  }
 
   if (
     selectedText === "" &&
