@@ -140,7 +140,7 @@ function getReplaceText(
 
   url = processUrl(url);
   url = decodeURI(url);
-  if (/\s/g.test(url) && !(url.startsWith("<") || url.endsWith(">"))) {
+  if (/\s/g.test(url) && !/^<.*?>$/g.test(url)) {
     url = "<" + url + ">";
   }
 
