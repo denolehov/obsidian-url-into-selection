@@ -123,6 +123,10 @@ function getReplaceText(clipboardText: string, selectedText: string, settings: P
   const imgEmbedMark = isImgEmbed(clipboardText, settings) ? "!" : "";
 
   url = processUrl(url);
+  url = decodeURI(url);
+  if (/\s/g.test(url) && !/^<.*?>$/g.test(url)) {
+    url = "<" + url + ">";
+  }
 
   if (selectedText === "" && settings.nothingSelected === NothingSelected.insertBare) {
     return `<${url}>`;
