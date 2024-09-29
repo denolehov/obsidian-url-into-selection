@@ -37,6 +37,9 @@ export default function UrlIntoSelection(editor: Editor, cb: string | ClipboardE
   const replaceText = getReplaceText(clipboardText, selectedText, settings);
   if (replaceText === null) return;
 
+  // If onlyUrls is enabled, and the text is not a URL, do nothing
+  if (settings.onlyUrls && !isUrl(clipboardText, settings)) return;
+
   // apply changes
   if (typeof cb !== "string") cb.preventDefault(); // prevent default paste behavior
   replace(editor, replaceText, replaceRange);
