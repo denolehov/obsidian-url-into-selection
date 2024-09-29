@@ -16,6 +16,7 @@ export interface PluginSettings {
   regex: string;
   nothingSelected: NothingSelected;
   listForImgEmbed: string;
+  onlyUrls: boolean;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     .source,
   nothingSelected: NothingSelected.doNothing,
   listForImgEmbed: "",
+  onlyUrls: true,
 };
 
 export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
@@ -32,6 +34,19 @@ export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
 
     containerEl.empty();
     containerEl.createEl("h2", { text: "URL-into-selection Settings" });
+
+    new Setting(containerEl)
+      .setName("Only URLs")
+      .setDesc(
+        "Only turns the selected text into a URL when the clipboard text is a URL"
+      )
+      .addToggle((toggle) => {
+        toggle.setValue(plugin.settings.onlyUrls).onChange((value) => {
+          plugin.settings.onlyUrls = value;
+          plugin.saveData(plugin.settings);
+          return value;
+        });
+      });
 
     new Setting(containerEl)
       .setName("Fallback Regular expression")
