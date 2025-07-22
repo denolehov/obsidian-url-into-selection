@@ -10,8 +10,8 @@ export default class UrlIntoSel_Plugin extends Plugin {
   settings: PluginSettings;
 
   // pasteHandler = (cm: CodeMirror.Editor, e: ClipboardEvent) => UrlIntoSelection(cm, e, this.settings);
-  pasteHandler = (evt: ClipboardEvent, editor: Editor) => UrlIntoSelection(editor, evt, this.settings);
-
+  pasteHandler = (evt: ClipboardEvent, editor: Editor) =>
+    UrlIntoSelection(editor, evt, this.settings);
 
   async onload() {
     console.log("loading url-into-selection");

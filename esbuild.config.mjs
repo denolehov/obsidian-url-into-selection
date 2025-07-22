@@ -10,25 +10,25 @@ if you want to view the source visit the plugins github repository
 const prod = process.argv[2] === "production";
 
 const context = await esbuild.context({
-    banner: {
-        js: banner,
-    },
-    entryPoints: ["src/main.ts"],
-    bundle: true,
-    external: ["obsidian"],
-    format: "cjs",
-    target: "es2018",
-    logLevel: "info",
-    sourcemap: prod ? false : "inline",
-    treeShaking: true,
-    platform: "node",
-    minify: prod,
-    outfile: "main.js",
+  banner: {
+    js: banner,
+  },
+  entryPoints: ["src/main.ts"],
+  bundle: true,
+  external: ["obsidian"],
+  format: "cjs",
+  target: "es2018",
+  logLevel: "info",
+  sourcemap: prod ? false : "inline",
+  treeShaking: true,
+  platform: "node",
+  minify: prod,
+  outfile: "main.js",
 });
 
 if (prod) {
-    await context.rebuild();
-    process.exit(0);
+  await context.rebuild();
+  process.exit(0);
 } else {
-    await context.watch();
+  await context.watch();
 }
