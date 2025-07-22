@@ -1,7 +1,7 @@
 {
   "id": "url-into-selection",
   "name": "Paste URL into selection",
-  "description": "Paste URL \"into\" selected text.",
+  "description": "Paste URL \"into\" selected text to create markdown links.",
   "isDesktopOnly": false,
   "js": "main.js",
   "version": "1.11.0"
