@@ -1,18 +1,10 @@
 import assertNever from "assert-never";
 import { NothingSelected, PluginSettings } from "./types";
-import fileUrl from "file-url";
 import { Editor, EditorPosition, EditorRange } from "obsidian";
+import { isUrl, processUrl, isImgEmbed, isWikilink } from "./utils/url";
+import { checkIfInMarkdownLink } from "./utils/markdown";
+import { stripSurroundingQuotes } from "./utils/quotes";
 
-// https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s18.html
-const win32Path = /^[a-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/i;
-const unixPath = /^(?:\/[^/]+)+\/?$/i;
-const testFilePath = (url: string) => {
-  // Don't treat text as file path if it starts with / followed by a word and then a space
-  // This catches command patterns like "/command args" or "/worldconfigcreate bool colorAccurateWorldmap true"
-  if (/^\/\w+\s/.test(url)) return false;
-  
-  return win32Path.test(url) || unixPath.test(url);
-};
 
 /**
  * @param editor Obsidian Editor Instance
@@ -31,7 +23,7 @@ export default function UrlIntoSelection(editor: Editor, cb: string | ClipboardE
   if (!editor.somethingSelected() && settings.nothingSelected === NothingSelected.doNothing)
     return;
 
-  if (typeof cb !== "string" && cb.clipboardData === null) {
+  if (typeof cb !== "string" && !cb.clipboardData) {
     console.error("empty clipboardData in ClipboardEvent");
     return;
   }
@@ -60,7 +52,7 @@ function getSelnRange(editor: Editor, settings: PluginSettings) {
   let replaceRange: EditorRange | null;
 
   if (editor.somethingSelected()) {
-    selectedText = editor.getSelection().trim();
+    selectedText = editor.getSelection();
     replaceRange = null;
   } else {
     switch (settings.nothingSelected) {
@@ -82,36 +74,6 @@ function getSelnRange(editor: Editor, settings: PluginSettings) {
   return { selectedText, replaceRange };
 }
 
-function isUrl(text: string, settings: PluginSettings): boolean {
-  if (text === "") return false;
-  
-  // Check for Obsidian wikilink format [[...]]
-  if (isWikilink(text)) return true;
-  
-  try {
-    // throw TypeError: Invalid URL if not valid
-    new URL(text);
-    return true;
-  } catch (error) {
-    // settings.regex: fallback test allows url without protocol (http,file...)
-    return testFilePath(text) || new RegExp(settings.regex).test(text);
-  }
-}
-
-function isWikilink(text: string): boolean {
-  return /^\[\[.+\]\]$/.test(text.trim());
-}
-
-function isImgEmbed(text: string, settings: PluginSettings): boolean {
-  const rules = settings.listForImgEmbed
-    .split("\n")
-    .filter((v) => v.length > 0)
-    .map((v) => new RegExp(v));
-  for (const reg of rules) {
-    if (reg.test(text)) return true;
-  }
-  return false;
-}
 
 /**
  * Validate that either the text on the clipboard or the selected text is a link, and if so return the link as
@@ -129,22 +91,18 @@ function getReplaceText(clipboardText: string, selectedText: string, settings: P
   let linktext: string;
   let url: string;
 
-  if (isUrl(clipboardText, settings)) {
+  if (isUrl(clipboardText.trim(), settings)) {
     linktext = selectedText;
-    url = clipboardText;
-  } else if (isUrl(selectedText, settings)) {
+    url = clipboardText.trim();
+  } else if (isUrl(selectedText.trim(), settings)) {
     linktext = clipboardText;
-    url = selectedText;
+    url = selectedText.trim();
   } else return null; // if neither of two is an URL, the following code would be skipped.
 
-  const imgEmbedMark = isImgEmbed(clipboardText, settings) ? "!" : "";
+  const imgEmbedMark = isImgEmbed(clipboardText.trim(), settings) ? "!" : "";
 
   // If we're inside markdown link parentheses, just return the URL without any wrapping
   if (isInMarkdownLink) {
-    // Process URL but skip the angle bracket wrapping
-    if (testFilePath(url)) {
-      return fileUrl(url, { resolve: false });
-    }
     return url;
   }
 
@@ -164,26 +122,12 @@ function getReplaceText(clipboardText: string, selectedText: string, settings: P
   url = processUrl(url);
 
   if (selectedText === "" && settings.nothingSelected === NothingSelected.insertBare) {
-    return `<${url}>`;
+    return /^<.*>$/.test(url) ? url : `<${url}>`;
   } else {
     return imgEmbedMark + `[${linktext}](${url})`;
   }
 }
 
-/** Process file url, special characters, etc */
-function processUrl(src: string): string {
-  let output;
-  if (testFilePath(src)) {
-    output = fileUrl(src, { resolve: false });
-  } else {
-    output = src;
-  }
-
-  if (/[<>]/.test(output))
-    output = output.replace("<", "%3C").replace(">", "%3E");
-
-  return /[\(\) ]/.test(output) ? `<${output}>` : output;
-}
 
 function getCbText(cb: string | ClipboardEvent): string | null {
   let clipboardText: string;
@@ -191,7 +135,7 @@ function getCbText(cb: string | ClipboardEvent): string | null {
   if (typeof cb === "string") {
     clipboardText = cb;
   } else {
-    if (cb.clipboardData === null) {
+    if (!cb.clipboardData) {
       console.error("empty clipboardData in ClipboardEvent");
       return null;
     } else {
@@ -201,31 +145,11 @@ function getCbText(cb: string | ClipboardEvent): string | null {
   return stripSurroundingQuotes(clipboardText.trim());
 }
 
-/**
- * Strips surrounding quotes from file paths and URLs.
- * Handles both single and double quotes that are commonly added by OS file managers.
- * Only strips if both opening and closing quotes match.
- */
-function stripSurroundingQuotes(text: string): string {
-  if (text.length < 2) return text;
-  
-  // Check for double quotes
-  if (text.startsWith('"') && text.endsWith('"')) {
-    return text.slice(1, -1);
-  }
-  
-  // Check for single quotes  
-  if (text.startsWith("'") && text.endsWith("'")) {
-    return text.slice(1, -1);
-  }
-  
-  return text;
-}
 
 function getWordBoundaries(editor: Editor, settings: PluginSettings): EditorRange {
   const cursor = editor.getCursor();
   const line = editor.getLine(cursor.line);
-  let wordBoundaries = findWordAt(line, cursor);;
+  let wordBoundaries = findWordAt(line, cursor);
 
   // If the token the cursor is on is a url, grab the whole thing instead of just parsing it like a word
   let start = wordBoundaries.from.ch;
@@ -271,55 +195,6 @@ function getCursor(editor: Editor): EditorRange {
   return { from: editor.getCursor(), to: editor.getCursor() };
 }
 
-/**
- * Check if the cursor/selection is inside markdown link parentheses
- * Handles patterns like [text]() and ![alt]()
- */
-function checkIfInMarkdownLink(editor: Editor, range: EditorRange): boolean {
-  const line = editor.getLine(range.from.line);
-  const cursorPos = range.from.ch;
-  
-  // Look backwards for the opening parenthesis and bracket pattern
-  let openParenIndex = -1;
-  let depth = 0;
-  
-  // First, check if we're inside parentheses
-  for (let i = cursorPos - 1; i >= 0; i--) {
-    if (line[i] === ')' && i < cursorPos) {
-      depth++;
-    } else if (line[i] === '(') {
-      if (depth === 0) {
-        openParenIndex = i;
-        break;
-      }
-      depth--;
-    }
-  }
-  
-  if (openParenIndex === -1) return false;
-  
-  // Now check if this parenthesis is preceded by ']'
-  if (openParenIndex > 0 && line[openParenIndex - 1] === ']') {
-    // Look for matching '[' or '!['
-    let bracketDepth = 0;
-    for (let i = openParenIndex - 2; i >= 0; i--) {
-      if (line[i] === ']') {
-        bracketDepth++;
-      } else if (line[i] === '[') {
-        if (bracketDepth === 0) {
-          // Check if this is an image link (preceded by '!')
-          if (i > 0 && line[i - 1] === '!') {
-            return true;
-          }
-          return true;
-        }
-        bracketDepth--;
-      }
-    }
-  }
-  
-  return false;
-}
 
 function replace(editor: Editor, replaceText: string, replaceRange: EditorRange | null = null): void {
   // replaceRange is only not null when there isn't anything selected.
@@ -329,3 +204,14 @@ function replace(editor: Editor, replaceText: string, replaceRange: EditorRange 
   // if word is null or undefined
   else editor.replaceSelection(replaceText);
 }
+
+// Export internal functions for testing
+export { 
+  getSelnRange, 
+  getReplaceText, 
+  getCbText, 
+  getWordBoundaries, 
+  findWordAt, 
+  getCursor, 
+  replace 
+};

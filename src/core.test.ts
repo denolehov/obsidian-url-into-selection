@@ -416,6 +416,24 @@ describe('File Path Processing (processUrl function)', () => {
   });
 });
 
+describe('Selection Whitespace Preservation', () => {
+  it('should preserve intentional leading and trailing spaces in link text', () => {
+    const editor = new Editor('  spaced text  ', { line: 0, ch: 0 });
+    editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 15 }); // Select including spaces
+    
+    UrlIntoSelection(editor, 'https://example.com', DEFAULT_SETTINGS);
+    expect(editor.getValue()).toBe('[  spaced text  ](https://example.com)');
+  });
+
+  it('should handle tabs and other whitespace characters in selection', () => {
+    const editor = new Editor('\ttext ', { line: 0, ch: 0 });
+    editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 6 }); // Select tab and trailing space
+    
+    UrlIntoSelection(editor, 'https://example.com', DEFAULT_SETTINGS);
+    expect(editor.getValue()).toBe('[\ttext ](https://example.com)');
+  });
+});
+
 describe('Bidirectional URL/Text Swapping', () => {
   describe('Selected text is URL, clipboard contains title', () => {
     it('should use clipboard text as title and selected URL as link', () => {
@@ -647,6 +665,18 @@ describe('Clipboard Event Handling', () => {
     
     UrlIntoSelection(editor, 'https://example.com', DEFAULT_SETTINGS);
     expect(editor.getValue()).toBe('[text](https://example.com)');
+  });
+
+  it('should handle undefined clipboardData gracefully', () => {
+    const editor = new Editor('text', { line: 0, ch: 0 });
+    const originalValue = editor.getValue();
+    
+    const mockClipboardEvent = {
+      clipboardData: undefined
+    } as unknown as ClipboardEvent;
+    
+    UrlIntoSelection(editor, mockClipboardEvent, DEFAULT_SETTINGS);
+    expect(editor.getValue()).toBe(originalValue); // No change
   });
 
   it('should extract text from ClipboardEvent', () => {
