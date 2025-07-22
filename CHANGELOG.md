@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.10.0](https://github.com/denolehov/obsidian-url-into-selection/compare/1.9.0...1.10.0) (2025-07-22)
+
+
+### Features
+
+* reject command-like text and configuration patterns in UrlIntoSelection ([44ef6f5](https://github.com/denolehov/obsidian-url-into-selection/commit/44ef6f55631975e3d79a0e3b5e4d70b7f4fa8053)), closes [#58](https://github.com/denolehov/obsidian-url-into-selection/issues/58)
+
 ## [1.9.0](https://github.com/denolehov/obsidian-url-into-selection/compare/1.8.1...1.9.0) (2025-07-22)
 
 
