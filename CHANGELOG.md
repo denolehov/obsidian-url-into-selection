@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/denolehov/obsidian-url-into-selection/compare/1.8.1...1.9.0) (2025-07-22)
+
+
+### Features
+
+* add quote stripping for file paths and URLs in editor ([dd59e09](https://github.com/denolehov/obsidian-url-into-selection/commit/dd59e0993b46e552f631379f8150d2f72b502571)), closes [#60](https://github.com/denolehov/obsidian-url-into-selection/issues/60)
+
 ### [1.8.1](https://github.com/denolehov/obsidian-url-into-selection/compare/1.7.0...1.8.1) (2025-07-22)
 
 
