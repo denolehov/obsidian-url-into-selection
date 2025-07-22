@@ -84,6 +84,10 @@ function getSelnRange(editor: Editor, settings: PluginSettings) {
 
 function isUrl(text: string, settings: PluginSettings): boolean {
   if (text === "") return false;
+  
+  // Check for Obsidian wikilink format [[...]]
+  if (isWikilink(text)) return true;
+  
   try {
     // throw TypeError: Invalid URL if not valid
     new URL(text);
@@ -92,6 +96,10 @@ function isUrl(text: string, settings: PluginSettings): boolean {
     // settings.regex: fallback test allows url without protocol (http,file...)
     return testFilePath(text) || new RegExp(settings.regex).test(text);
   }
+}
+
+function isWikilink(text: string): boolean {
+  return /^\[\[.+\]\]$/.test(text.trim());
 }
 
 function isImgEmbed(text: string, settings: PluginSettings): boolean {
@@ -138,6 +146,19 @@ function getReplaceText(clipboardText: string, selectedText: string, settings: P
       return fileUrl(url, { resolve: false });
     }
     return url;
+  }
+
+  // Handle Obsidian wikilinks
+  if (isWikilink(url)) {
+    if (selectedText === "" && settings.nothingSelected === NothingSelected.insertBare) {
+      return url; // Return bare wikilink
+    } else if (linktext === "") {
+      return url; // No alias text, return bare wikilink
+    } else {
+      // Add alias to wikilink: [[link|alias]]
+      const linkContent = url.slice(2, -2); // Remove [[ and ]]
+      return `[[${linkContent}|${linktext}]]`;
+    }
   }
 
   url = processUrl(url);
