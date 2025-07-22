@@ -1,5 +1,5 @@
 import assertNever from "assert-never";
-import { NothingSelected, PluginSettings } from "setting";
+import { NothingSelected, PluginSettings } from "./types";
 import fileUrl from "file-url";
 import { Editor, EditorPosition, EditorRange } from "obsidian";
 
@@ -34,7 +34,9 @@ export default function UrlIntoSelection(editor: Editor, cb: string | ClipboardE
   if (clipboardText === null) return;
 
   const { selectedText, replaceRange } = getSelnRange(editor, settings);
-  const replaceText = getReplaceText(clipboardText, selectedText, settings);
+  const cursorOrRange = replaceRange || { from: editor.getCursor(), to: editor.getCursor() };
+  const isInMarkdownLink = checkIfInMarkdownLink(editor, cursorOrRange);
+  const replaceText = getReplaceText(clipboardText, selectedText, settings, isInMarkdownLink);
   if (replaceText === null) return;
 
   // apply changes
@@ -105,9 +107,10 @@ function isImgEmbed(text: string, settings: PluginSettings): boolean {
  * @param clipboardText text on the clipboard.
  * @param selectedText highlighted text
  * @param settings plugin settings
+ * @param isInMarkdownLink whether the cursor is inside markdown link parentheses
  * @returns a mardown link or image link if the clipboard or selction value is a valid link, else null.
  */
-function getReplaceText(clipboardText: string, selectedText: string, settings: PluginSettings): string | null {
+function getReplaceText(clipboardText: string, selectedText: string, settings: PluginSettings, isInMarkdownLink: boolean): string | null {
 
   let linktext: string;
   let url: string;
@@ -121,6 +124,15 @@ function getReplaceText(clipboardText: string, selectedText: string, settings: P
   } else return null; // if neither of two is an URL, the following code would be skipped.
 
   const imgEmbedMark = isImgEmbed(clipboardText, settings) ? "!" : "";
+
+  // If we're inside markdown link parentheses, just return the URL without any wrapping
+  if (isInMarkdownLink) {
+    // Process URL but skip the angle bracket wrapping
+    if (testFilePath(url)) {
+      return fileUrl(url, { resolve: false });
+    }
+    return url;
+  }
 
   url = processUrl(url);
 
@@ -209,6 +221,56 @@ const findWordAt = (() => {
 
 function getCursor(editor: Editor): EditorRange {
   return { from: editor.getCursor(), to: editor.getCursor() };
+}
+
+/**
+ * Check if the cursor/selection is inside markdown link parentheses
+ * Handles patterns like [text]() and ![alt]()
+ */
+function checkIfInMarkdownLink(editor: Editor, range: EditorRange): boolean {
+  const line = editor.getLine(range.from.line);
+  const cursorPos = range.from.ch;
+  
+  // Look backwards for the opening parenthesis and bracket pattern
+  let openParenIndex = -1;
+  let depth = 0;
+  
+  // First, check if we're inside parentheses
+  for (let i = cursorPos - 1; i >= 0; i--) {
+    if (line[i] === ')' && i < cursorPos) {
+      depth++;
+    } else if (line[i] === '(') {
+      if (depth === 0) {
+        openParenIndex = i;
+        break;
+      }
+      depth--;
+    }
+  }
+  
+  if (openParenIndex === -1) return false;
+  
+  // Now check if this parenthesis is preceded by ']'
+  if (openParenIndex > 0 && line[openParenIndex - 1] === ']') {
+    // Look for matching '[' or '!['
+    let bracketDepth = 0;
+    for (let i = openParenIndex - 2; i >= 0; i--) {
+      if (line[i] === ']') {
+        bracketDepth++;
+      } else if (line[i] === '[') {
+        if (bracketDepth === 0) {
+          // Check if this is an image link (preceded by '!')
+          if (i > 0 && line[i - 1] === '!') {
+            return true;
+          }
+          return true;
+        }
+        bracketDepth--;
+      }
+    }
+  }
+  
+  return false;
 }
 
 function replace(editor: Editor, replaceText: string, replaceRange: EditorRange | null = null): void {
