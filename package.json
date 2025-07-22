@@ -1,6 +1,6 @@
 {
   "name": "obsidian-url-into-selection",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Paste URL \"into\" selected text",
   "main": "main.js",
   "scripts": {
