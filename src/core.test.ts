@@ -351,7 +351,6 @@ describe("NothingSelected Behaviors", () => {
         "Check [New Link Text](https://old.com) out",
       );
     });
-
   });
 
   describe("insertInline mode", () => {
@@ -634,7 +633,6 @@ describe("Quote Stripping for File Paths", () => {
   });
 
   describe("Edge cases for quote stripping", () => {
-
     it("should not strip quotes if only closing quote exists", () => {
       const editor = new Editor("text", { line: 0, ch: 0 });
       editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
@@ -642,7 +640,6 @@ describe("Quote Stripping for File Paths", () => {
       UrlIntoSelection(editor, 'https://example.com"', DEFAULT_SETTINGS);
       expect(editor.getValue()).toBe('[text](https://example.com")');
     });
-
 
     it("should handle empty string after quote stripping", () => {
       const editor = new Editor("text", { line: 0, ch: 0 });

@@ -194,14 +194,14 @@ function getWordBoundaries(
   let end = wordBoundaries.to.ch;
   while (start > 0 && !/\s/.test(line.charAt(start - 1))) --start;
   while (end < line.length && !/\s/.test(line.charAt(end))) ++end;
-  
+
   const expandedText = line.slice(start, end);
-  
+
   // Don't auto-select existing markdown links to prevent double-wrapping
   if (/^\[.*]\(.*\)$/.test(expandedText)) {
     return wordBoundaries; // Return original word boundaries, don't expand
   }
-  
+
   if (isUrl(expandedText, settings)) {
     wordBoundaries.from.ch = start;
     wordBoundaries.to.ch = end;
