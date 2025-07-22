@@ -224,6 +224,44 @@ describe('URL Detection Logic (isUrl function)', () => {
       UrlIntoSelection(editor, '', settings);
       expect(editor.getValue()).toBe('');
     });
+
+    // Issue GH#58: Commands should not be treated as URLs
+    it('should reject command-like text starting with slash and word characters', () => {
+      const editor = new Editor('', { line: 0, ch: 0 });
+      
+      UrlIntoSelection(editor, '/worldconfigcreate bool colorAccurateWorldmap true', settings);
+      expect(editor.getValue()).toBe(''); // Should not process
+    });
+
+    it('should reject other command patterns', () => {
+      const editor = new Editor('', { line: 0, ch: 0 });
+      
+      UrlIntoSelection(editor, '/help command', settings);
+      expect(editor.getValue()).toBe(''); // Should not process
+    });
+
+    // Test with selected text to simulate what user reported in issue #58
+    it('should not process command when pasting with selected text', () => {
+      const editor = new Editor('some text', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 9 });
+      
+      UrlIntoSelection(editor, '/worldconfigcreate bool colorAccurateWorldmap true', settings);
+      expect(editor.getValue()).toBe('some text'); // Should not change the text
+    });
+
+    it('should reject text with spaces (unencoded URLs)', () => {
+      const editor = new Editor('', { line: 0, ch: 0 });
+      
+      UrlIntoSelection(editor, 'this has spaces in it', settings);
+      expect(editor.getValue()).toBe(''); // Should not process
+    });
+
+    it('should reject configuration-like text', () => {
+      const editor = new Editor('', { line: 0, ch: 0 });
+      
+      UrlIntoSelection(editor, 'config.setting = true', settings);
+      expect(editor.getValue()).toBe(''); // Should not process
+    });
   });
 
   describe('Custom Regex Fallback', () => {

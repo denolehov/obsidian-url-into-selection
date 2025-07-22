@@ -6,7 +6,13 @@ import { Editor, EditorPosition, EditorRange } from "obsidian";
 // https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch08s18.html
 const win32Path = /^[a-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*$/i;
 const unixPath = /^(?:\/[^/]+)+\/?$/i;
-const testFilePath = (url: string) => win32Path.test(url) || unixPath.test(url);
+const testFilePath = (url: string) => {
+  // Don't treat text as file path if it starts with / followed by a word and then a space
+  // This catches command patterns like "/command args" or "/worldconfigcreate bool colorAccurateWorldmap true"
+  if (/^\/\w+\s/.test(url)) return false;
+  
+  return win32Path.test(url) || unixPath.test(url);
+};
 
 /**
  * @param editor Obsidian Editor Instance
