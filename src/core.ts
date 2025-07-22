@@ -171,7 +171,28 @@ function getCbText(cb: string | ClipboardEvent): string | null {
       clipboardText = cb.clipboardData.getData("text");
     }
   }
-  return clipboardText.trim();
+  return stripSurroundingQuotes(clipboardText.trim());
+}
+
+/**
+ * Strips surrounding quotes from file paths and URLs.
+ * Handles both single and double quotes that are commonly added by OS file managers.
+ * Only strips if both opening and closing quotes match.
+ */
+function stripSurroundingQuotes(text: string): string {
+  if (text.length < 2) return text;
+  
+  // Check for double quotes
+  if (text.startsWith('"') && text.endsWith('"')) {
+    return text.slice(1, -1);
+  }
+  
+  // Check for single quotes  
+  if (text.startsWith("'") && text.endsWith("'")) {
+    return text.slice(1, -1);
+  }
+  
+  return text;
 }
 
 function getWordBoundaries(editor: Editor, settings: PluginSettings): EditorRange {
