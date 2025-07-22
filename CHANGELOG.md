@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.11.0](https://github.com/denolehov/obsidian-url-into-selection/compare/1.10.0...1.11.0) (2025-07-22)
+
+
+### Features
+
+* preserve selected text as alias when pasting Obsidian wikilinks ([6a96db5](https://github.com/denolehov/obsidian-url-into-selection/commit/6a96db5287f8155a5153194355c0ea11162e1ea0)), closes [#56](https://github.com/denolehov/obsidian-url-into-selection/issues/56)
+
+
+### Bug Fixes
+
+* resolve critical bugs and refactor codebase structure ([dd4f714](https://github.com/denolehov/obsidian-url-into-selection/commit/dd4f714b169a9d2d9757f42934ec63a9cda9df72))
+
 ## [1.10.0](https://github.com/denolehov/obsidian-url-into-selection/compare/1.9.0...1.10.0) (2025-07-22)
 
 
