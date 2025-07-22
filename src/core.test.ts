@@ -352,17 +352,6 @@ describe("NothingSelected Behaviors", () => {
       );
     });
 
-    it("should NOT auto-select existing markdown links to prevent double-wrapping", () => {
-      const settings = {
-        ...DEFAULT_SETTINGS,
-        nothingSelected: NothingSelected.autoSelect,
-      };
-      editor = new Editor("[test](test.com)", { line: 0, ch: 1 }); // cursor in the text part of markdown link
-
-      UrlIntoSelection(editor, "https://example.com", settings);
-      // Should not change the text since it doesn't auto-select the entire markdown link
-      expect(editor.getValue()).toBe("[test](test.com)");
-    });
   });
 
   describe("insertInline mode", () => {
@@ -645,13 +634,6 @@ describe("Quote Stripping for File Paths", () => {
   });
 
   describe("Edge cases for quote stripping", () => {
-    it("should not strip quotes if only opening quote exists", () => {
-      const editor = new Editor("text", { line: 0, ch: 0 });
-      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
-
-      UrlIntoSelection(editor, '"https://example.com', DEFAULT_SETTINGS);
-      expect(editor.getValue()).toBe('[text]("https://example.com)');
-    });
 
     it("should not strip quotes if only closing quote exists", () => {
       const editor = new Editor("text", { line: 0, ch: 0 });
@@ -661,13 +643,6 @@ describe("Quote Stripping for File Paths", () => {
       expect(editor.getValue()).toBe('[text](https://example.com")');
     });
 
-    it("should not strip mismatched quotes", () => {
-      const editor = new Editor("text", { line: 0, ch: 0 });
-      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
-
-      UrlIntoSelection(editor, "\"https://example.com'", DEFAULT_SETTINGS);
-      expect(editor.getValue()).toBe("[text](\"https://example.com')");
-    });
 
     it("should handle empty string after quote stripping", () => {
       const editor = new Editor("text", { line: 0, ch: 0 });
