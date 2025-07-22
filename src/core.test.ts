@@ -581,6 +581,65 @@ describe('Quote Stripping for File Paths', () => {
   });
 });
 
+describe('Obsidian Wikilink Support', () => {
+  let editor: Editor;
+  let settings: PluginSettings;
+
+  beforeEach(() => {
+    editor = new Editor('', { line: 0, ch: 0 });
+    settings = { ...DEFAULT_SETTINGS };
+  });
+
+  describe('when pasting wikilinks with selected text', () => {
+    it('should preserve selected text as alias for basic wikilink', () => {
+      editor = new Editor('Click Link Here', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 15 });
+      const clipboardText = '[[10. Links]]';
+      
+      UrlIntoSelection(editor, clipboardText, settings);
+      expect(editor.getValue()).toBe('[[10. Links|Click Link Here]]');
+    });
+
+    it('should preserve selected text as alias for wikilink with header', () => {
+      editor = new Editor('Click Link Here', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 15 });
+      const clipboardText = '[[10. Links#Header1]]';
+      
+      UrlIntoSelection(editor, clipboardText, settings);
+      expect(editor.getValue()).toBe('[[10. Links#Header1|Click Link Here]]');
+    });
+
+    it('should handle wikilinks with spaces and special characters', () => {
+      editor = new Editor('Custom Text', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 11 });
+      const clipboardText = '[[My Note With Spaces#Section 1]]';
+      
+      UrlIntoSelection(editor, clipboardText, settings);
+      expect(editor.getValue()).toBe('[[My Note With Spaces#Section 1|Custom Text]]');
+    });
+
+    it('should insert bare wikilink when no text is selected and setting is insertBare', () => {
+      editor = new Editor('', { line: 0, ch: 0 });
+      settings.nothingSelected = NothingSelected.insertBare;
+      const clipboardText = '[[10. Links#Header1]]';
+      
+      UrlIntoSelection(editor, clipboardText, settings);
+      expect(editor.getValue()).toBe('[[10. Links#Header1]]');
+    });
+  });
+
+  describe('when selected text is wikilink and clipboard has regular text', () => {
+    it('should use clipboard text as alias for selected wikilink', () => {
+      editor = new Editor('[[10. Links#Header1]]', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 21 });
+      const clipboardText = 'Click Link Here';
+      
+      UrlIntoSelection(editor, clipboardText, settings);
+      expect(editor.getValue()).toBe('[[10. Links#Header1|Click Link Here]]');
+    });
+  });
+});
+
 describe('Clipboard Event Handling', () => {
   it('should handle string input', () => {
     const editor = new Editor('text', { line: 0, ch: 0 });
