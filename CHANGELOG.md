@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.11.2](https://github.com/denolehov/obsidian-url-into-selection/compare/1.11.1...1.11.2) (2025-07-22)
+
+
+### Bug Fixes
+
+* various false positives are now fixed ([31ec582](https://github.com/denolehov/obsidian-url-into-selection/commit/31ec5827f3617d9dcd96051ee9f1014cac9872b4)), closes [#39](https://github.com/denolehov/obsidian-url-into-selection/issues/39) [#40](https://github.com/denolehov/obsidian-url-into-selection/issues/40)
+
 ### [1.11.1](https://github.com/denolehov/obsidian-url-into-selection/compare/1.11.0...1.11.1) (2025-07-22)
 
 
