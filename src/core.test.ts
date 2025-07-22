@@ -418,6 +418,131 @@ describe('Bidirectional URL/Text Swapping', () => {
   });
 });
 
+describe('Quote Stripping for File Paths', () => {
+  describe('Windows file paths with quotes', () => {
+    it('should strip double quotes from Windows file paths', () => {
+      const editor = new Editor('some text', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 9 });
+      
+      // Windows "Copy as path" format with double quotes
+      UrlIntoSelection(editor, '"V:\\2022 Trading Calendar.xlsx"', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[some text](file:///V:/2022%20Trading%20Calendar.xlsx)');
+    });
+
+    it('should strip double quotes from Windows file paths with spaces', () => {
+      const editor = new Editor('document', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 8 });
+      
+      UrlIntoSelection(editor, '"C:\\Program Files\\My App\\file.txt"', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[document](file:///C:/Program%20Files/My%20App/file.txt)');
+    });
+
+    it('should handle double quotes around regular Windows paths without spaces', () => {
+      const editor = new Editor('file', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
+      
+      UrlIntoSelection(editor, '"C:\\Users\\Documents\\file.txt"', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[file](file:///C:/Users/Documents/file.txt)');
+    });
+  });
+
+  describe('macOS file paths with quotes', () => {
+    it('should strip single quotes from macOS file paths', () => {
+      const editor = new Editor('document', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 8 });
+      
+      // macOS Sequoia "Copy as Pathname" format with single quotes
+      UrlIntoSelection(editor, "'/Users/name/Documents/My File.txt'", DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[document](file:///Users/name/Documents/My%20File.txt)');
+    });
+
+    it('should handle single quotes around Unix paths without spaces', () => {
+      const editor = new Editor('file', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
+      
+      UrlIntoSelection(editor, "'/home/user/documents/file.txt'", DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[file](file:///home/user/documents/file.txt)');
+    });
+  });
+
+  describe('URLs with quotes', () => {
+    it('should strip double quotes from URLs', () => {
+      const editor = new Editor('link', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
+      
+      UrlIntoSelection(editor, '"https://example.com/page with spaces"', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[link](<https://example.com/page with spaces>)');
+    });
+
+    it('should strip single quotes from URLs', () => {
+      const editor = new Editor('website', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 7 });
+      
+      UrlIntoSelection(editor, "'https://example.com/path'", DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[website](https://example.com/path)');
+    });
+  });
+
+  describe('Edge cases for quote stripping', () => {
+    it('should not strip quotes if only opening quote exists', () => {
+      const editor = new Editor('text', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
+      
+      UrlIntoSelection(editor, '"https://example.com', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[text]("https://example.com)');
+    });
+
+    it('should not strip quotes if only closing quote exists', () => {
+      const editor = new Editor('text', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
+      
+      UrlIntoSelection(editor, 'https://example.com"', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[text](https://example.com")');
+    });
+
+    it('should not strip mismatched quotes', () => {
+      const editor = new Editor('text', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
+      
+      UrlIntoSelection(editor, '"https://example.com\'', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[text]("https://example.com\')');
+    });
+
+    it('should handle empty string after quote stripping', () => {
+      const editor = new Editor('text', { line: 0, ch: 0 });
+      const originalValue = editor.getValue();
+      
+      UrlIntoSelection(editor, '""', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe(originalValue); // No change, empty string is not a valid URL
+    });
+
+    it('should handle single character strings', () => {
+      const editor = new Editor('text', { line: 0, ch: 0 });
+      const originalValue = editor.getValue();
+      
+      UrlIntoSelection(editor, '"', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe(originalValue); // No change, too short
+    });
+
+    it('should handle strings that are only quotes', () => {
+      const editor = new Editor('text', { line: 0, ch: 0 });
+      const originalValue = editor.getValue();
+      
+      UrlIntoSelection(editor, "''", DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe(originalValue); // No change, empty after stripping
+    });
+
+    it('should preserve quotes that are part of the actual URL/path', () => {
+      const editor = new Editor('query', { line: 0, ch: 0 });
+      editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 5 });
+      
+      // URL with quotes in the middle (not surrounding)
+      UrlIntoSelection(editor, 'https://example.com/search?q="quoted text"&other=value', DEFAULT_SETTINGS);
+      expect(editor.getValue()).toBe('[query](<https://example.com/search?q="quoted text"&other=value>)');
+    });
+  });
+});
+
 describe('Clipboard Event Handling', () => {
   it('should handle string input', () => {
     const editor = new Editor('text', { line: 0, ch: 0 });
@@ -461,6 +586,21 @@ describe('Clipboard Event Handling', () => {
     const mockClipboardEvent = {
       clipboardData: {
         getData: () => '  https://example.com  '
+      },
+      preventDefault: () => {}
+    } as unknown as ClipboardEvent;
+    
+    UrlIntoSelection(editor, mockClipboardEvent, DEFAULT_SETTINGS);
+    expect(editor.getValue()).toBe('[text](https://example.com)');
+  });
+
+  it('should strip quotes from clipboard event data', () => {
+    const editor = new Editor('text', { line: 0, ch: 0 });
+    editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 4 });
+    
+    const mockClipboardEvent = {
+      clipboardData: {
+        getData: () => '"https://example.com"'
       },
       preventDefault: () => {}
     } as unknown as ClipboardEvent;
