@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.1](https://github.com/denolehov/obsidian-url-into-selection/compare/1.7.0...1.8.1) (2025-07-22)
+
+
+### Bug Fixes
+
+* changelog gen ([8eee267](https://github.com/denolehov/obsidian-url-into-selection/commit/8eee267964ddaaf5967b9fd75d74ee57cd8d9754))
+* prevent angle brackets when pasting URLs inside markdown links ([829e86e](https://github.com/denolehov/obsidian-url-into-selection/commit/829e86ec2508d521ff19f27102a46a2fc5d04647)), closes [#64](https://github.com/denolehov/obsidian-url-into-selection/issues/64)
+
 ## [1.8.0](https://github.com/denolehov/obsidian-url-into-selection/compare/v1.7.0...v1.8.0) (2025-07-22)
 
 
