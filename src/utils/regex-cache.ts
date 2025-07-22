@@ -5,22 +5,29 @@ import { PluginSettings } from "../types";
  */
 class RegexCache {
   private fallbackUrlRegex: RegExp | null = null;
-  private fallbackUrlRegexString: string = '';
+  private fallbackUrlRegexString: string = "";
   private imgEmbedRegexes: RegExp[] = [];
-  private imgEmbedRegexString: string = '';
+  private imgEmbedRegexString: string = "";
 
   /**
    * Get the fallback URL regex, compiling it if needed
    */
   getFallbackUrlRegex(regexString: string): RegExp {
-    if (this.fallbackUrlRegex === null || this.fallbackUrlRegexString !== regexString) {
+    if (
+      this.fallbackUrlRegex === null ||
+      this.fallbackUrlRegexString !== regexString
+    ) {
       try {
         this.fallbackUrlRegex = new RegExp(regexString);
         this.fallbackUrlRegexString = regexString;
       } catch (error) {
         // Fallback to a simple regex if the user's regex is invalid
-        console.warn('Invalid regex pattern in settings, using fallback:', error);
-        this.fallbackUrlRegex = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
+        console.warn(
+          "Invalid regex pattern in settings, using fallback:",
+          error,
+        );
+        this.fallbackUrlRegex =
+          /^[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
         this.fallbackUrlRegexString = regexString; // Still cache the string to detect changes
       }
     }
@@ -39,7 +46,7 @@ class RegexCache {
           try {
             return new RegExp(v);
           } catch (error) {
-            console.warn('Invalid image embed regex pattern:', v, error);
+            console.warn("Invalid image embed regex pattern:", v, error);
             return /$.^/; // Regex that never matches anything
           }
         });
@@ -53,9 +60,9 @@ class RegexCache {
    */
   clear(): void {
     this.fallbackUrlRegex = null;
-    this.fallbackUrlRegexString = '';
+    this.fallbackUrlRegexString = "";
     this.imgEmbedRegexes = [];
-    this.imgEmbedRegexString = '';
+    this.imgEmbedRegexString = "";
   }
 }
 

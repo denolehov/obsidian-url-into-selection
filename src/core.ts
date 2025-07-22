@@ -5,22 +5,36 @@ import { isUrl, processUrl, isImgEmbed, isWikilink } from "./utils/url";
 import { checkIfInMarkdownLink } from "./utils/markdown";
 import { stripSurroundingQuotes } from "./utils/quotes";
 
-
 /**
  * @param editor Obsidian Editor Instance
  * @param cbString text on clipboard
  * @param settings plugin settings
  */
-export default function UrlIntoSelection(editor: Editor, cbString: string, settings: PluginSettings): void;
+export default function UrlIntoSelection(
+  editor: Editor,
+  cbString: string,
+  settings: PluginSettings,
+): void;
 /**
  * @param editor Obsidian Editor Instance
  * @param cbEvent clipboard event
  * @param settings plugin settings
  */
-export default function UrlIntoSelection(editor: Editor, cbEvent: ClipboardEvent, settings: PluginSettings): void;
-export default function UrlIntoSelection(editor: Editor, cb: string | ClipboardEvent, settings: PluginSettings): void {
+export default function UrlIntoSelection(
+  editor: Editor,
+  cbEvent: ClipboardEvent,
+  settings: PluginSettings,
+): void;
+export default function UrlIntoSelection(
+  editor: Editor,
+  cb: string | ClipboardEvent,
+  settings: PluginSettings,
+): void {
   // skip all if nothing should be done
-  if (!editor.somethingSelected() && settings.nothingSelected === NothingSelected.doNothing)
+  if (
+    !editor.somethingSelected() &&
+    settings.nothingSelected === NothingSelected.doNothing
+  )
     return;
 
   if (typeof cb !== "string" && !cb.clipboardData) {
@@ -32,9 +46,17 @@ export default function UrlIntoSelection(editor: Editor, cb: string | ClipboardE
   if (clipboardText === null) return;
 
   const { selectedText, replaceRange } = getSelnRange(editor, settings);
-  const cursorOrRange = replaceRange || { from: editor.getCursor(), to: editor.getCursor() };
+  const cursorOrRange = replaceRange || {
+    from: editor.getCursor(),
+    to: editor.getCursor(),
+  };
   const isInMarkdownLink = checkIfInMarkdownLink(editor, cursorOrRange);
-  const replaceText = getReplaceText(clipboardText, selectedText, settings, isInMarkdownLink);
+  const replaceText = getReplaceText(
+    clipboardText,
+    selectedText,
+    settings,
+    isInMarkdownLink,
+  );
   if (replaceText === null) return;
 
   // apply changes
@@ -42,8 +64,14 @@ export default function UrlIntoSelection(editor: Editor, cb: string | ClipboardE
   replace(editor, replaceText, replaceRange);
 
   // if nothing is selected and the nothing selected behavior is to insert [](url) place the cursor between the square brackets
-  if ((selectedText === "") && settings.nothingSelected === NothingSelected.insertInline) {
-    editor.setCursor({ ch: replaceRange.from.ch + 1, line: replaceRange.from.line });
+  if (
+    selectedText === "" &&
+    settings.nothingSelected === NothingSelected.insertInline
+  ) {
+    editor.setCursor({
+      ch: replaceRange.from.ch + 1,
+      line: replaceRange.from.line,
+    });
   }
 }
 
@@ -74,7 +102,6 @@ function getSelnRange(editor: Editor, settings: PluginSettings) {
   return { selectedText, replaceRange };
 }
 
-
 /**
  * Validate that either the text on the clipboard or the selected text is a link, and if so return the link as
  * a markdown link with the selected text as the link's text, or, if the value on the clipboard is not a link
@@ -86,8 +113,12 @@ function getSelnRange(editor: Editor, settings: PluginSettings) {
  * @param isInMarkdownLink whether the cursor is inside markdown link parentheses
  * @returns a mardown link or image link if the clipboard or selction value is a valid link, else null.
  */
-function getReplaceText(clipboardText: string, selectedText: string, settings: PluginSettings, isInMarkdownLink: boolean): string | null {
-
+function getReplaceText(
+  clipboardText: string,
+  selectedText: string,
+  settings: PluginSettings,
+  isInMarkdownLink: boolean,
+): string | null {
   let linktext: string;
   let url: string;
 
@@ -108,7 +139,10 @@ function getReplaceText(clipboardText: string, selectedText: string, settings: P
 
   // Handle Obsidian wikilinks
   if (isWikilink(url)) {
-    if (selectedText === "" && settings.nothingSelected === NothingSelected.insertBare) {
+    if (
+      selectedText === "" &&
+      settings.nothingSelected === NothingSelected.insertBare
+    ) {
       return url; // Return bare wikilink
     } else if (linktext === "") {
       return url; // No alias text, return bare wikilink
@@ -121,13 +155,15 @@ function getReplaceText(clipboardText: string, selectedText: string, settings: P
 
   url = processUrl(url);
 
-  if (selectedText === "" && settings.nothingSelected === NothingSelected.insertBare) {
+  if (
+    selectedText === "" &&
+    settings.nothingSelected === NothingSelected.insertBare
+  ) {
     return /^<.*>$/.test(url) ? url : `<${url}>`;
   } else {
     return imgEmbedMark + `[${linktext}](${url})`;
   }
 }
-
 
 function getCbText(cb: string | ClipboardEvent): string | null {
   let clipboardText: string;
@@ -145,8 +181,10 @@ function getCbText(cb: string | ClipboardEvent): string | null {
   return stripSurroundingQuotes(clipboardText.trim());
 }
 
-
-function getWordBoundaries(editor: Editor, settings: PluginSettings): EditorRange {
+function getWordBoundaries(
+  editor: Editor,
+  settings: PluginSettings,
+): EditorRange {
   const cursor = editor.getCursor();
   const line = editor.getLine(cursor.line);
   let wordBoundaries = findWordAt(line, cursor);
@@ -156,7 +194,15 @@ function getWordBoundaries(editor: Editor, settings: PluginSettings): EditorRang
   let end = wordBoundaries.to.ch;
   while (start > 0 && !/\s/.test(line.charAt(start - 1))) --start;
   while (end < line.length && !/\s/.test(line.charAt(end))) ++end;
-  if (isUrl(line.slice(start, end), settings)) {
+  
+  const expandedText = line.slice(start, end);
+  
+  // Don't auto-select existing markdown links to prevent double-wrapping
+  if (/^\[.*]\(.*\)$/.test(expandedText)) {
+    return wordBoundaries; // Return original word boundaries, don't expand
+  }
+  
+  if (isUrl(expandedText, settings)) {
     wordBoundaries.from.ch = start;
     wordBoundaries.to.ch = end;
   }
@@ -164,30 +210,38 @@ function getWordBoundaries(editor: Editor, settings: PluginSettings): EditorRang
 }
 
 const findWordAt = (() => {
-  const nonASCIISingleCaseWordChar = /[\u00df\u0587\u0590-\u05f4\u0600-\u06ff\u3040-\u309f\u30a0-\u30ff\u3400-\u4db5\u4e00-\u9fcc\uac00-\ud7af]/;
+  const nonASCIISingleCaseWordChar =
+    /[\u00df\u0587\u0590-\u05f4\u0600-\u06ff\u3040-\u309f\u30a0-\u30ff\u3400-\u4db5\u4e00-\u9fcc\uac00-\ud7af]/;
 
   function isWordChar(char: string) {
-    return /\w/.test(char) || char > "\x80" &&
-      (char.toUpperCase() != char.toLowerCase() || nonASCIISingleCaseWordChar.test(char));
+    return (
+      /\w/.test(char) ||
+      (char > "\x80" &&
+        (char.toUpperCase() != char.toLowerCase() ||
+          nonASCIISingleCaseWordChar.test(char)))
+    );
   }
 
   return (line: string, pos: EditorPosition): EditorRange => {
     let check;
     let start = pos.ch;
     let end = pos.ch;
-    (end === line.length) ? --start : ++end;
+    end === line.length ? --start : ++end;
     const startChar = line.charAt(pos.ch);
     if (isWordChar(startChar)) {
       check = (ch: string) => isWordChar(ch);
     } else if (/\s/.test(startChar)) {
       check = (ch: string) => /\s/.test(ch);
     } else {
-      check = (ch: string) => (!/\s/.test(ch) && !isWordChar(ch));
+      check = (ch: string) => !/\s/.test(ch) && !isWordChar(ch);
     }
 
     while (start > 0 && check(line.charAt(start - 1))) --start;
     while (end < line.length && check(line.charAt(end))) ++end;
-    return { from: { line: pos.line, ch: start }, to: { line: pos.line, ch: end } };
+    return {
+      from: { line: pos.line, ch: start },
+      to: { line: pos.line, ch: end },
+    };
   };
 })();
 
@@ -195,8 +249,11 @@ function getCursor(editor: Editor): EditorRange {
   return { from: editor.getCursor(), to: editor.getCursor() };
 }
 
-
-function replace(editor: Editor, replaceText: string, replaceRange: EditorRange | null = null): void {
+function replace(
+  editor: Editor,
+  replaceText: string,
+  replaceRange: EditorRange | null = null,
+): void {
   // replaceRange is only not null when there isn't anything selected.
   if (replaceRange && replaceRange.from && replaceRange.to) {
     editor.replaceRange(replaceText, replaceRange.from, replaceRange.to);
@@ -206,12 +263,12 @@ function replace(editor: Editor, replaceText: string, replaceRange: EditorRange 
 }
 
 // Export internal functions for testing
-export { 
-  getSelnRange, 
-  getReplaceText, 
-  getCbText, 
-  getWordBoundaries, 
-  findWordAt, 
-  getCursor, 
-  replace 
+export {
+  getSelnRange,
+  getReplaceText,
+  getCbText,
+  getWordBoundaries,
+  findWordAt,
+  getCursor,
+  replace,
 };

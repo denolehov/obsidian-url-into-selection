@@ -13,7 +13,7 @@ export function testFilePath(url: string): boolean {
   // Don't treat text as file path if it starts with / followed by a word and then a space
   // This catches command patterns like "/command args" or "/worldconfigcreate bool colorAccurateWorldmap true"
   if (/^\/\w+\s/.test(url)) return false;
-  
+
   return win32Path.test(url) || unixPath.test(url);
 }
 
@@ -24,22 +24,62 @@ export function isWikilink(text: string): boolean {
   return /^\[\[.+\]\]$/.test(text.trim());
 }
 
+// Valid URL schemes that we should consider as legitimate URLs
+const VALID_URL_SCHEMES = new Set([
+  "http",
+  "https",
+  "ftp",
+  "ftps",
+  "file",
+  "mailto",
+  "tel",
+  "sms",
+  "data",
+  "blob",
+  "obsidian",
+  "zotero",
+  "notion",
+  "slack",
+  "discord",
+  "teams",
+  "ssh",
+  "git",
+  "svn",
+  "ldap",
+  "ldaps",
+  "ws",
+  "wss",
+  "magnet",
+]);
+
 /**
  * Check if text is a valid URL
  */
 export function isUrl(text: string, settings: PluginSettings): boolean {
   if (text === "") return false;
-  
+
   // Check for Obsidian wikilink format [[...]]
   if (isWikilink(text)) return true;
-  
+
   try {
     // throw TypeError: Invalid URL if not valid
-    new URL(text);
-    return true;
+    const url = new URL(text);
+    const protocol = url.protocol.slice(0, -1); // Remove trailing ':'
+
+    // Handle Windows drive letters (like C:, D:) - treat as file paths
+    if (/^[a-z]$/i.test(protocol)) {
+      return testFilePath(text);
+    }
+
+    // Only accept URLs with recognized schemes to avoid false positives
+    // like "font-style: italic" being parsed as font-style://italic
+    return VALID_URL_SCHEMES.has(protocol);
   } catch (error) {
     // settings.regex: fallback test allows url without protocol (http,file...)
-    return testFilePath(text) || regexCache.getFallbackUrlRegex(settings.regex).test(text);
+    return (
+      testFilePath(text) ||
+      regexCache.getFallbackUrlRegex(settings.regex).test(text)
+    );
   }
 }
 
