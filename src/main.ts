@@ -4,7 +4,7 @@ import {
   PluginSettings,
   UrlIntoSelectionSettingsTab,
   DEFAULT_SETTINGS,
-} from "setting";
+} from "./setting";
 
 export default class UrlIntoSel_Plugin extends Plugin {
   settings: PluginSettings;

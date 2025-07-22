@@ -1,22 +1,8 @@
-import UrlIntoSel_Plugin from "main";
+import UrlIntoSel_Plugin from "./main";
 import { PluginSettingTab, Setting } from "obsidian";
+import { NothingSelected, PluginSettings } from "./types";
 
-export const enum NothingSelected {
-  /** Default paste behaviour */
-  doNothing,
-  /** Automatically select word surrounding the cursor */
-  autoSelect,
-  /** Insert `[](url)` */
-  insertInline,
-  /** Insert `<url>` */
-  insertBare,
-}
-
-export interface PluginSettings {
-  regex: string;
-  nothingSelected: NothingSelected;
-  listForImgEmbed: string;
-}
+export { NothingSelected, PluginSettings } from './types';
 
 export const DEFAULT_SETTINGS: PluginSettings = {
   regex: /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/
