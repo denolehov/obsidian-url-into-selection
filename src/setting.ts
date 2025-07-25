@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
       .source,
   nothingSelected: NothingSelected.doNothing,
   listForImgEmbed: "",
+  disableInCodeBlocks: true,
 };
 
 export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
@@ -79,5 +80,17 @@ export class UrlIntoSelectionSettingsTab extends PluginSettingTab {
         text.inputEl.rows = 6;
         text.inputEl.cols = 25;
       });
+
+    new Setting(containerEl)
+      .setName("Disable in code blocks")
+      .setDesc("Disable URL processing when pasting inside code blocks (both fenced and inline code)")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(plugin.settings.disableInCodeBlocks)
+          .onChange(async (value) => {
+            plugin.settings.disableInCodeBlocks = value;
+            await plugin.saveSettings();
+          })
+      );
   }
 }

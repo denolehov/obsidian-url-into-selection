@@ -168,6 +168,39 @@ describe("URL into Selection - Markdown Link Context", () => {
         "Some text\n[Title](https://example.com)\nMore text",
       );
     });
+
+    it("should handle pasting URL into existing link with placeholder text (reported issue)", () => {
+      // Setup: [example](paste_here) with "paste_here" selected
+      editor = new Editor("[example](paste_here)", { line: 0, ch: 10 });
+      editor.setSelection({ line: 0, ch: 10 }, { line: 0, ch: 20 });
+      const clipboardText = "google.com";
+
+      // Act
+      UrlIntoSelection(editor, clipboardText, settings);
+
+      // Assert: Should replace "paste_here" with "google.com" without creating nested links
+      expect(editor.getValue()).toBe("[example](google.com)");
+      // The bug would produce: [example]([ ](google.com))
+    });
+
+    it("should handle pasting bare domain URLs without protocol", () => {
+      // Test various bare domain formats
+      const testCases = [
+        { domain: "google.com", expected: "[example](google.com)" },
+        { domain: "github.com", expected: "[example](github.com)" },
+        { domain: "example.org", expected: "[example](example.org)" },
+        { domain: "sub.example.com", expected: "[example](sub.example.com)" },
+      ];
+
+      testCases.forEach(({ domain, expected }) => {
+        editor = new Editor("[example](paste_here)", { line: 0, ch: 10 });
+        editor.setSelection({ line: 0, ch: 10 }, { line: 0, ch: 20 });
+        
+        UrlIntoSelection(editor, domain, settings);
+        
+        expect(editor.getValue()).toBe(expected);
+      });
+    });
   });
 });
 
@@ -820,5 +853,386 @@ describe("Clipboard Event Handling", () => {
 
     UrlIntoSelection(editor, mockClipboardEvent, DEFAULT_SETTINGS);
     expect(editor.getValue()).toBe("[text](https://example.com)");
+  });
+});
+
+describe("Code Block Detection", () => {
+  let editor: Editor;
+  let settings: PluginSettings;
+
+  beforeEach(() => {
+    settings = {
+      ...DEFAULT_SETTINGS,
+      disableInCodeBlocks: false, // Start with feature disabled to test both states
+    };
+  });
+
+  describe("Fenced code blocks", () => {
+    describe("when cursor is inside fenced code block", () => {
+      it("should skip URL processing when disableInCodeBlocks is true", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "```javascript\nconsole.log('test');\n// paste here\n```";
+        editor = new Editor(content, { line: 2, ch: 3 }); // cursor in comment line
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change - URL processing skipped
+      });
+
+      it("should process URL normally when disableInCodeBlocks is false", () => {
+        settings.disableInCodeBlocks = false;
+        settings.nothingSelected = NothingSelected.insertBare;
+        const content = "```javascript\nconsole.log('test');\n\n```";
+        editor = new Editor(content, { line: 2, ch: 0 }); // cursor on empty line in code block
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe("```javascript\nconsole.log('test');\n<https://example.com>\n```");
+      });
+
+      it("should detect cursor in code block with language specifier", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "```python\ndef hello():\n    # cursor here\n    pass\n```";
+        editor = new Editor(content, { line: 2, ch: 6 });
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+
+      it("should detect cursor in code block without language specifier", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "```\nsome code\ncursor here\n```";
+        editor = new Editor(content, { line: 2, ch: 0 });
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+
+      it("should handle selected text inside code block", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "```js\nconst url = 'text';\n```";
+        editor = new Editor(content, { line: 1, ch: 13 });
+        editor.setSelection({ line: 1, ch: 13 }, { line: 1, ch: 17 }); // select 'text'
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+    });
+
+    describe("when cursor is outside fenced code block", () => {
+      it("should process URL normally when cursor is before code block", () => {
+        settings.disableInCodeBlocks = true;
+        settings.nothingSelected = NothingSelected.insertBare;
+        const content = "Text before\n```\ncode\n```";
+        editor = new Editor(content, { line: 0, ch: 5 }); // cursor in "Text before"
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe("Text <https://example.com>before\n```\ncode\n```");
+      });
+
+      it("should process URL normally when cursor is after code block", () => {
+        settings.disableInCodeBlocks = true;
+        settings.nothingSelected = NothingSelected.insertBare;
+        const content = "```\ncode\n```\nText after";
+        editor = new Editor(content, { line: 3, ch: 5 }); // cursor in "Text after"
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe("```\ncode\n```\nText <https://example.com>after");
+      });
+
+      it("should process URL normally between code blocks", () => {
+        settings.disableInCodeBlocks = true;
+        settings.nothingSelected = NothingSelected.insertBare;
+        const content = "```\ncode1\n```\nMiddle text\n```\ncode2\n```";
+        editor = new Editor(content, { line: 3, ch: 7 }); // cursor in "Middle text"
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe("```\ncode1\n```\nMiddle <https://example.com>text\n```\ncode2\n```");
+      });
+    });
+
+    describe("edge cases for fenced code blocks", () => {
+      it("should handle cursor on opening fence line", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "```javascript\ncode\n```";
+        editor = new Editor(content, { line: 0, ch: 3 }); // cursor on opening ```
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // Should skip - considered inside block
+      });
+
+      it("should handle cursor on closing fence line", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "```\ncode\n```";
+        editor = new Editor(content, { line: 2, ch: 1 }); // cursor on closing ```
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // Should skip - considered inside block
+      });
+
+      it("should handle nested code blocks in blockquotes", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "> ```\n> code here\n> ```";
+        editor = new Editor(content, { line: 1, ch: 7 }); // cursor in "code here"
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+
+      it("should handle code blocks with extra backticks", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "````javascript\ncode with ``` inside\n````";
+        editor = new Editor(content, { line: 1, ch: 5 });
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+
+      it("should not be confused by inline code that looks like fence", () => {
+        settings.disableInCodeBlocks = true;
+        settings.nothingSelected = NothingSelected.insertBare;
+        const content = "This is ```` not a code block\nNext line";
+        editor = new Editor(content, { line: 1, ch: 5 });
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe("This is ```` not a code block\nNext <https://example.com>line");
+      });
+    });
+  });
+
+  describe("Inline code blocks", () => {
+    describe("when cursor is inside inline code", () => {
+      it("should skip URL processing when disableInCodeBlocks is true", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "This is `inline code` text";
+        editor = new Editor(content, { line: 0, ch: 15 }); // cursor inside inline code
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+
+      it("should process URL normally when disableInCodeBlocks is false", () => {
+        settings.disableInCodeBlocks = false;
+        settings.nothingSelected = NothingSelected.insertBare;
+        const content = "This is `code` text";
+        editor = new Editor(content, { line: 0, ch: 11 }); // cursor inside inline code
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe("This is `co<https://example.com>de` text");
+      });
+
+      it("should handle selected text inside inline code", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "Text with `some code here` inline";
+        editor = new Editor(content, { line: 0, ch: 11 });
+        editor.setSelection({ line: 0, ch: 11 }, { line: 0, ch: 15 }); // select "some"
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+
+      it("should detect cursor in inline code with special characters", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "Use `const url = 'https://test.com'` here";
+        editor = new Editor(content, { line: 0, ch: 20 }); // cursor inside the inline code
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+    });
+
+    describe("when cursor is outside inline code", () => {
+      it("should process URL normally when cursor is before inline code", () => {
+        settings.disableInCodeBlocks = true;
+        settings.nothingSelected = NothingSelected.insertBare;
+        const content = "Text `code` after";
+        editor = new Editor(content, { line: 0, ch: 3 }); // cursor before inline code
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe("Tex<https://example.com>t `code` after");
+      });
+
+      it("should process URL normally when cursor is after inline code", () => {
+        settings.disableInCodeBlocks = true;
+        settings.nothingSelected = NothingSelected.insertBare;
+        const content = "Before `code` text";
+        editor = new Editor(content, { line: 0, ch: 15 }); // cursor after inline code
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe("Before `code` t<https://example.com>ext");
+      });
+    });
+
+    describe("edge cases for inline code", () => {
+      it("should handle cursor on opening backtick", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "Text `code` text";
+        editor = new Editor(content, { line: 0, ch: 5 }); // cursor on opening `
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // Should skip - considered inside
+      });
+
+      it("should handle cursor on closing backtick", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "Text `code` text";
+        editor = new Editor(content, { line: 0, ch: 10 }); // cursor on closing `
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // Should skip - considered inside
+      });
+
+      it("should handle multiple inline code blocks on same line", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "Use `foo` or `bar` here";
+        editor = new Editor(content, { line: 0, ch: 7 }); // cursor inside first inline code
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+
+      it("should handle escaped backticks", () => {
+        settings.disableInCodeBlocks = true;
+        settings.nothingSelected = NothingSelected.insertBare;
+        const content = "This \\`is not\\` code";
+        editor = new Editor(content, { line: 0, ch: 10 }); // cursor between escaped backticks
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe("This \\`is <https://example.com>not\\` code"); // Should process
+      });
+
+      it("should handle double backticks for inline code", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "This is ``code with ` inside`` text";
+        editor = new Editor(content, { line: 0, ch: 20 }); // cursor inside double-backtick code
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // No change
+      });
+
+      it("should handle unclosed inline code", () => {
+        settings.disableInCodeBlocks = true;
+        const content = "This is `unclosed code";
+        editor = new Editor(content, { line: 0, ch: 15 }); // cursor after unclosed backtick
+        
+        UrlIntoSelection(editor, "https://example.com", settings);
+        expect(editor.getValue()).toBe(content); // Should skip - considered inside unclosed code
+      });
+    });
+  });
+
+  describe("Complex scenarios", () => {
+    it("should handle inline code inside fenced code block", () => {
+      settings.disableInCodeBlocks = true;
+      const content = "```\nThis has `inline` code\n```";
+      editor = new Editor(content, { line: 1, ch: 14 }); // cursor inside inline code within fenced block
+      
+      UrlIntoSelection(editor, "https://example.com", settings);
+      expect(editor.getValue()).toBe(content); // No change - in fenced block
+    });
+
+    it("should handle code blocks in lists", () => {
+      settings.disableInCodeBlocks = true;
+      const content = "- Item 1\n  ```\n  code\n  ```\n- Item 2";
+      editor = new Editor(content, { line: 2, ch: 4 }); // cursor in indented code block
+      
+      UrlIntoSelection(editor, "https://example.com", settings);
+      expect(editor.getValue()).toBe(content); // No change
+    });
+
+    it("should handle mixed content with multiple code blocks", () => {
+      settings.disableInCodeBlocks = true;
+      const multilineContent = 
+`Normal text here
+\`\`\`javascript
+function test() {
+  return true;
+}
+\`\`\`
+More text with \`inline code\` here
+And another block:
+\`\`\`
+raw block
+\`\`\`
+Final text`;
+      
+      // Test cursor in normal text
+      editor = new Editor(multilineContent, { line: 0, ch: 7 });
+      settings.nothingSelected = NothingSelected.insertBare;
+      UrlIntoSelection(editor, "https://example.com", settings);
+      expect(editor.getValue()).toContain("Normal <https://example.com>text here");
+      
+      // Reset and test cursor in fenced block
+      editor = new Editor(multilineContent, { line: 3, ch: 8 });
+      UrlIntoSelection(editor, "https://example.com", settings);
+      expect(editor.getLine(3)).toBe("  return true;"); // No change
+      
+      // Reset and test cursor in inline code
+      editor = new Editor(multilineContent, { line: 6, ch: 20 });
+      UrlIntoSelection(editor, "https://example.com", settings);
+      expect(editor.getLine(6)).toBe("More text with `inline code` here"); // No change
+    });
+
+    it("should handle autoSelect mode with code blocks", () => {
+      settings.disableInCodeBlocks = true;
+      settings.nothingSelected = NothingSelected.autoSelect;
+      const content = "```\nword\n```";
+      editor = new Editor(content, { line: 1, ch: 2 }); // cursor in "word" inside code block
+      
+      UrlIntoSelection(editor, "https://example.com", settings);
+      expect(editor.getValue()).toBe(content); // No change - should skip even with autoSelect
+    });
+  });
+
+  describe("Performance considerations", () => {
+    it("should efficiently handle large documents with many code blocks", () => {
+      settings.disableInCodeBlocks = true;
+      const lines = [];
+      for (let i = 0; i < 100; i++) {
+        lines.push("Normal text line " + i);
+        lines.push("```");
+        lines.push("Code block " + i);
+        lines.push("```");
+        lines.push("More text with `inline " + i + "` code");
+      }
+      const content = lines.join("\n");
+      
+      // Test cursor in a code block in the middle of document
+      // Each block uses 5 lines: normal text, ```, code block, ```, inline text
+      // Block n is at line 2 + n*5, so block 40 is at line 2 + 40*5 = 202
+      editor = new Editor(content, { line: 202, ch: 5 }); // line 202 = code block 40
+      UrlIntoSelection(editor, "https://example.com", settings);
+      expect(editor.getLine(202)).toBe("Code block 40"); // No change
+    });
+  });
+
+  describe("Integration with existing features", () => {
+    it("should respect code block detection when inside markdown link parentheses", () => {
+      settings.disableInCodeBlocks = true;
+      const content = "```\n[link]()\n```";
+      editor = new Editor(content, { line: 1, ch: 7 }); // cursor between parentheses in code block
+      
+      UrlIntoSelection(editor, "https://example.com", settings);
+      expect(editor.getValue()).toBe(content); // No change - code block takes precedence
+    });
+
+    it("should handle insertInline mode inside code blocks", () => {
+      settings.disableInCodeBlocks = true;
+      settings.nothingSelected = NothingSelected.insertInline;
+      const content = "```\ncode here\n```";
+      editor = new Editor(content, { line: 1, ch: 5 });
+      
+      UrlIntoSelection(editor, "https://example.com", settings);
+      expect(editor.getValue()).toBe(content); // No change - should not insert
+    });
+
+    it("should handle image embeds inside code blocks", () => {
+      settings.disableInCodeBlocks = true;
+      settings.listForImgEmbed = "\\.png$";
+      const content = "```\nimage\n```";
+      editor = new Editor(content, { line: 1, ch: 0 });
+      editor.setSelection({ line: 1, ch: 0 }, { line: 1, ch: 5 }); // select "image"
+      
+      UrlIntoSelection(editor, "https://example.com/test.png", settings);
+      expect(editor.getValue()).toBe(content); // No change - code block prevents image embed
+    });
   });
 });

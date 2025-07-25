@@ -4,6 +4,7 @@ import { Editor, EditorPosition, EditorRange } from "obsidian";
 import { isUrl, processUrl, isImgEmbed, isWikilink } from "./utils/url";
 import { checkIfInMarkdownLink } from "./utils/markdown";
 import { stripSurroundingQuotes } from "./utils/quotes";
+import { isInCodeBlock } from "./utils/codeblock";
 
 /**
  * @param editor Obsidian Editor Instance
@@ -36,6 +37,20 @@ export default function UrlIntoSelection(
     settings.nothingSelected === NothingSelected.doNothing
   )
     return;
+
+  // skip if cursor is in code block and the setting is enabled
+  if (settings.disableInCodeBlocks) {
+    if (editor.somethingSelected()) {
+      // Check both start and end of selection
+      const from = editor.getCursor("from");
+      const to = editor.getCursor("to");
+      if (isInCodeBlock(editor, from) || isInCodeBlock(editor, to)) {
+        return;
+      }
+    } else if (isInCodeBlock(editor, editor.getCursor())) {
+      return;
+    }
+  }
 
   if (typeof cb !== "string" && !cb.clipboardData) {
     console.error("empty clipboardData in ClipboardEvent");

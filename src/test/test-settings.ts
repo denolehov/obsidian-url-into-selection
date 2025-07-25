@@ -6,4 +6,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
       .source,
   nothingSelected: NothingSelected.doNothing,
   listForImgEmbed: "",
+  disableInCodeBlocks: false,
 };
