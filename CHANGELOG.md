@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.11.3](///compare/1.11.2...1.11.3) (2025-07-25)
+
 ### [1.11.2](https://github.com/denolehov/obsidian-url-into-selection/compare/1.11.1...1.11.2) (2025-07-22)
 
 
