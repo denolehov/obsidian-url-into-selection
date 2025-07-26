@@ -13,4 +13,5 @@ export interface PluginSettings {
   regex: string;
   nothingSelected: NothingSelected;
   listForImgEmbed: string;
+  disableInCodeBlocks: boolean;
 }
