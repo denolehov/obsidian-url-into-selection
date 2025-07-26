@@ -154,6 +154,10 @@ function getReplaceText(
   }
 
   url = processUrl(url);
+  url = decodeURI(url);
+  if (/\s/g.test(url) && !/^<.*?>$/g.test(url)) {
+    url = "<" + url + ">";
+  }
 
   if (
     selectedText === "" &&
