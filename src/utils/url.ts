@@ -50,6 +50,7 @@ const VALID_URL_SCHEMES = new Set([
   "ws",
   "wss",
   "magnet",
+  "x-devonthink-item",
 ]);
 
 /**

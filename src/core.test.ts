@@ -311,6 +311,44 @@ describe("URL Detection Logic (isUrl function)", () => {
   });
 });
 
+describe("DevonThink Links", () => {
+  let editor: Editor;
+  let settings: PluginSettings;
+
+  beforeEach(() => {
+    settings = {
+      ...DEFAULT_SETTINGS,
+      nothingSelected: NothingSelected.insertBare,
+    };
+  });
+
+  it("should create markdown link when pasting DevonThink URL with text selected", () => {
+    editor = new Editor("selected text", { line: 0, ch: 0 });
+    editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 13 });
+
+    UrlIntoSelection(editor, "x-devonthink-item://7EA8D8EE-BC00-42F2-95FA-3872D0042FF9", settings);
+    expect(editor.getValue()).toBe("[selected text](x-devonthink-item://7EA8D8EE-BC00-42F2-95FA-3872D0042FF9)");
+  });
+
+  it("should create bare link when pasting DevonThink URL with no selection", () => {
+    editor = new Editor("", { line: 0, ch: 0 });
+
+    UrlIntoSelection(editor, "x-devonthink-item://7EA8D8EE-BC00-42F2-95FA-3872D0042FF9", settings);
+    expect(editor.getValue()).toBe("<x-devonthink-item://7EA8D8EE-BC00-42F2-95FA-3872D0042FF9>");
+  });
+
+  it("should create inline link format when nothingSelected is insertInline", () => {
+    const inlineSettings = {
+      ...DEFAULT_SETTINGS,
+      nothingSelected: NothingSelected.insertInline,
+    };
+    editor = new Editor("", { line: 0, ch: 0 });
+
+    UrlIntoSelection(editor, "x-devonthink-item://ABC123", inlineSettings);
+    expect(editor.getValue()).toBe("[](x-devonthink-item://ABC123)");
+  });
+});
+
 describe("NothingSelected Behaviors", () => {
   let editor: Editor;
 

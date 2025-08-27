@@ -83,6 +83,11 @@ describe("URL Utilities", () => {
       );
     });
 
+    it("should detect DevonThink URLs", () => {
+      expect(isUrl("x-devonthink-item://7EA8D8EE-BC00-42F2-95FA-3872D0042FF9", DEFAULT_SETTINGS)).toBe(true);
+      expect(isUrl("x-devonthink-item://ABC123", DEFAULT_SETTINGS)).toBe(true);
+    });
+
     it("should detect file paths as URLs", () => {
       expect(isUrl("C:\\Users\\file.txt", DEFAULT_SETTINGS)).toBe(true);
       expect(isUrl("/home/user/file.txt", DEFAULT_SETTINGS)).toBe(true);
