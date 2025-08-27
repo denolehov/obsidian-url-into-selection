@@ -4,5 +4,5 @@
   "description": "Paste URL \"into\" selected text to create markdown links.",
   "isDesktopOnly": false,
   "js": "main.js",
-  "version": "1.11.3"
+  "version": "1.11.4"
 }
